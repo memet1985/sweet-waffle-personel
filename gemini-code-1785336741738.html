@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sweet Waffle - Personel Takip</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ff4757">
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 20px; text-align: center; }
+        .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #ff4757; }
+        .btn { display: block; width: 100%; padding: 12px; margin: 10px 0; background: #ff4757; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        .btn:active { background: #e84118; }
+        .log-box { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-top: 15px; text-align: left; font-size: 14px; max-height: 150px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Sweet Waffle</h2>
+    <p id="branch-info">Şube: Kurtköy (Örnek)</p>
+    
+    <button class="btn" onclick="scanQRCode('Giriş')">İşe Giriş Yap</button>
+    <button class="btn" onclick="scanQRCode('Yemek Mola')">Yemek Molası</button>
+    <button class="btn" onclick="scanQRCode('Çıkış')">İşten Çıkış Yap</button>
+
+    <div class="log-box">
+        <strong>Son İşlemler:</strong>
+        <ul id="log-list" style="padding-left: 20px; margin: 5px 0;">
+            <li>Henüz işlem yapılmadı.</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // Şube Merkez Koordinatları Örneği (Kurtköy)
+    const branchLocation = { lat: 40.9412, lon: 29.3115, maxRadius: 100 }; // 100 metre yarıçap
+
+    function scanQRCode(actionType) {
+        if (!navigator.geolocation) {
+            alert("Tarayıcınız konum bilgisini desteklemiyor.");
+            return;
+        }
+
+        alert(actionType + " için karekod okunuyor ve konum doğrulanıyor...");
+
+        navigator.geolocation.getCurrentPosition(position => {
+            const userLat = position.coords.latitude;
+            const userLon = position.coords.longitude;
+
+            const distance = calculateDistance(userLat, userLon, branchLocation.lat, branchLocation.lon);
+
+            if (distance <= branchLocation.maxRadius) {
+                alert("Başarılı! Konumdasınız. " + actionType + " kaydedildi. (Mesafe: " + Math.round(distance) + "m)");
+                addLog(actionType);
+            } else {
+                alert("Hata! Şube alanının dışındasınız. İşlem onaylanmadı. (Uzaklık: " + Math.round(distance) + "m)");
+            }
+        }, error => {
+            alert("Konum alınamadı. Lütfen konum iznini açın.");
+        }, { enableHighAccuracy: true });
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // Metre cinsinden Dünya yarıçapı
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    function addLog(action) {
+        const list = document.getElementById("log-list");
+        if (list.children[0] && list.children[0].innerText.includes("Henüz")) {
+            list.innerHTML = "";
+        }
+        const li = document.createElement("li");
+        const time = new Date().toLocaleTimeString();
+        li.innerText = action + " - " + time;
+        list.prepend(li);
+    }
+</script>
+
+</body>
+</html>
