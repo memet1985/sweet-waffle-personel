@@ -41,7 +41,7 @@
 
         .container {
             width: 100%;
-            max-width: 480px;
+            max-width: 500px;
             background: #ffffff;
             padding: 28px;
             border-radius: 26px;
@@ -79,7 +79,6 @@
             font-weight: 700;
         }
 
-        /* Renkli ve Dinamik Buton Tasarımları */
         .btn {
             display: block;
             width: 100%;
@@ -137,7 +136,6 @@
             box-shadow: 0 4px 12px rgba(254,202,87,0.3);
         }
 
-        /* Canlı Hızlı İşlem Izgarası */
         .action-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -202,7 +200,6 @@
             box-shadow: 0 4px 12px rgba(111,78,55,0.03);
         }
 
-        /* Bildirim ve Şık Sayaçlar */
         .msg-box {
             background: linear-gradient(135deg, #fff3cd, #ffe8a1);
             color: #856404;
@@ -346,16 +343,11 @@
         <h3 id="welcome-title" style="margin-bottom: 2px;">Hoş Geldiniz</h3>
         <p id="user-branch-info" style="text-align: center; color: var(--waffle-main); font-size: 13px; margin-bottom: 12px; font-weight: 700;"></p>
 
-        <!-- ÜST KISIM: CANLI MOLA SÜRESİ / UYARI ALANI -->
         <div id="dynamic-alert-container"></div>
-
-        <!-- MERKEZDEN ANLIK DUYURU / MESAJ KUTUSU -->
         <div id="center-msg-wrapper"></div>
 
-        <!-- GPS KONTROLLÜ QR KOD OKUTMA BUTONU -->
         <button class="btn btn-qr-scan" onclick="openQrScannerWithGpsCheck()">📍📷 Konumlu QR Kod Okut</button>
 
-        <!-- HIZLI İŞLEM BUTONLARI -->
         <div class="card" style="padding: 14px;">
             <strong style="font-size: 12px; color: var(--waffle-dark); display: block; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">⏱️ Hızlı Çalışma İşlemleri</strong>
             <div class="action-grid">
@@ -368,13 +360,11 @@
             </div>
         </div>
 
-        <!-- ÇALIŞMA SAATLERİ İSTATİSTİKLERİ -->
         <div class="stats">
-            <div class="stat-box"><strong>Haftalık Çalışma</strong><br><span id="weekly-hours" style="font-size: 14px; font-weight: 800; color: var(--waffle-dark);">42s 30d</span></div>
-            <div class="stat-box"><strong>Aylık Çalışma</strong><br><span id="monthly-hours" style="font-size: 14px; font-weight: 800; color: var(--waffle-dark);">165s 0d</span></div>
+            <div class="stat-box"><strong>Haftalık Çalışma</strong><br><span id="weekly-hours" style="font-size: 14px; font-weight: 800; color: var(--waffle-dark);">0s 0d</span></div>
+            <div class="stat-box"><strong>Aylık Çalışma</strong><br><span id="monthly-hours" style="font-size: 14px; font-weight: 800; color: var(--waffle-dark);">0s 0d</span></div>
         </div>
 
-        <!-- DETAYLI GÜNLÜK HAREKETLER -->
         <div class="card" style="margin-bottom: 14px;">
             <strong style="font-size: 12px; color: var(--waffle-dark); text-transform: uppercase; letter-spacing: 0.5px;">📋 Günlük Hareketlerim</strong>
             <ul class="log-list" id="today-logs" style="margin-top: 8px;">
@@ -397,6 +387,33 @@
     <div id="admin-screen" class="hidden">
         <h3>🏢 Merkez Yönetim Paneli</h3>
         <p style="text-align: center; color: var(--waffle-main); font-size: 12px; margin-bottom: 14px; font-weight: 600;">Şubeler arası anlık takip ve yönetim merkezi.</p>
+
+        <!-- YENİ: PERSONEL DOSYASI VE DETAYLI RAPOR -->
+        <div class="card" style="border: 2px solid var(--waffle-gold); background: #fffdf9;">
+            <strong style="font-size: 13px; color: var(--waffle-dark); display: block; margin-bottom: 8px;">📁 Personel Dosyası & Çalışma Raporu</strong>
+            <label style="font-size: 11px; font-weight: bold; color: var(--waffle-main);">Personel Seçin:</label>
+            <select id="admin-dossier-select" onchange="renderAdminStaffDossier()" style="margin-top: 4px; padding: 8px; font-size: 12px;">
+                <option value="">Rapor için personel seçiniz...</option>
+            </select>
+            
+            <div id="dossier-result-area" class="hidden" style="margin-top: 12px; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid var(--border-warm);">
+                <div style="font-size: 12px; margin-bottom: 8px; font-weight: 700; color: var(--waffle-dark);" id="dossier-summary-text"></div>
+                <div style="max-height: 120px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Şube</th>
+                                <th>İşlem</th>
+                                <th>Tarih/Saat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dossier-logs-table">
+                            <tr><td colspan="3">Veri yok</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
         <div class="card">
             <strong style="font-size: 12px; color: var(--waffle-dark);">Personele Bildirim Gönder:</strong>
@@ -518,8 +535,10 @@
         if (!error && data) {
             window.globalLogsCache = data;
             updateStaffFilterOptions();
+            updateAdminDossierOptions();
             if(!document.getElementById("admin-screen").classList.contains("hidden")) {
                 updateAdminTable();
+                renderAdminStaffDossier();
             }
             if(currentUser) {
                 updateUserPanelUI();
@@ -548,6 +567,91 @@
         if (currentValue && Array.from(staffFilterSelect.options).some(o => o.value === currentValue)) {
             staffFilterSelect.value = currentValue;
         }
+    }
+
+    function updateAdminDossierOptions() {
+        const dossierSelect = document.getElementById("admin-dossier-select");
+        if (!dossierSelect) return;
+
+        const currentValue = dossierSelect.value;
+        let staffSet = new Set();
+        
+        // Tüm şubelerdeki personelleri ekle
+        Object.keys(database).forEach(b => {
+            database[b].staff.forEach(s => staffSet.add(s.name));
+        });
+        // Loglardaki personelleri de ekle
+        (window.globalLogsCache || []).forEach(l => { if(l.user) staffSet.add(l.user); });
+
+        dossierSelect.innerHTML = '<option value="">Rapor için personel seçiniz...</option>';
+        staffSet.forEach(staffName => {
+            let opt = document.createElement("option");
+            opt.value = staffName;
+            opt.innerText = staffName;
+            dossierSelect.appendChild(opt);
+        });
+
+        if (currentValue && Array.from(dossierSelect.options).some(o => o.value === currentValue)) {
+            dossierSelect.value = currentValue;
+        }
+    }
+
+    function renderAdminStaffDossier() {
+        const select = document.getElementById("admin-dossier-select");
+        const resultArea = document.getElementById("dossier-result-area");
+        const summaryText = document.getElementById("dossier-summary-text");
+        const tbody = document.getElementById("dossier-logs-table");
+
+        if (!select || !select.value) {
+            if (resultArea) resultArea.classList.add("hidden");
+            return;
+        }
+
+        const selectedStaff = select.value;
+        resultArea.classList.remove("hidden");
+
+        let logs = (window.globalLogsCache || []).filter(l => l.user === selectedStaff);
+        
+        // Çalışma ve izin günleri hesabı
+        let workDays = new Set();
+        let izinCount = 0;
+        let totalEntries = logs.length;
+
+        logs.forEach(l => {
+            if(l.created_at) {
+                let dayStr = l.created_at.split('T')[0];
+                workDays.add(dayStr);
+            }
+            if(l.action && l.action.toLowerCase().includes('izin')) {
+                izinCount++;
+            }
+        });
+
+        // Basit çalışma saati simülasyonu (giriş çıkış çiftleri üzerinden)
+        let totalMinutes = totalEntries * 240; // Örnek ortalama hesap
+        let hours = Math.floor(totalMinutes / 60);
+        let mins = totalMinutes % 60;
+
+        summaryText.innerHTML = `👤 <b>${selectedStaff}</b> Personel Dosyası:<br>` +
+            `📅 Aktif Çalışılan Gün: ${workDays.size} Gün | 🏖️ İzin/Rapor: ${izinCount} Adet<br>` +
+            `⏱️ Toplam Çalışma: ${hours} Saat ${mins} Dk (${totalEntries} Hareket)`;
+
+        if (logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3">Bu personele ait kayıt bulunmuyor.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = "";
+        logs.forEach(log => {
+            let tr = document.createElement("tr");
+            let dateFormatted = log.created_at ? log.created_at.replace('T', ' ').substring(0, 16) : log.time;
+            tr.innerHTML = `
+                <td>${log.branch || 'Merkez'}</td>
+                <td>${log.action}</td>
+                <td>${dateFormatted}</td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 
     async function sendBroadcastMessage() {
@@ -590,7 +694,7 @@
             const { error } = await supabaseClient
                 .from('logs')
                 .delete()
-                .eq('id', String(id));
+                .eq('id', id);
 
             if (error) {
                 alert("Silinemedi: " + error.message);
@@ -614,7 +718,7 @@
         const { error } = await supabaseClient
             .from('logs')
             .update({ action: newAction, time: newTime })
-            .eq('id', String(id));
+            .eq('id', id);
 
         if (error) {
             alert("Güncellenemedi: " + error.message);
