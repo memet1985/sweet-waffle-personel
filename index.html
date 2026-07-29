@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sweet Waffle - Personel ve Merkez Yönetim</title>
+    <title>Sweet Waffle - Personel, QR ve Merkez Yönetim</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#5c3a21">
+    <!-- QR Kütüphanesi (Html5-Qrcode) -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         :root {
             --chocolat: #5c3a21;
@@ -14,10 +16,9 @@
             --accent: #d35400;
             --green: #27ae60;
             --red: #c0392b;
-            --dark-card: #ffffff;
         }
         body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: linear-gradient(135deg, #fdfbf7, #f7ebd0); margin: 0; padding: 20px; color: #333; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
-        .container { width: 100%; max-width: 480px; background: var(--dark-card); padding: 30px; border-radius: 20px; box-shadow: 0 12px 35px rgba(92,58,33,0.18); border: 3px solid var(--waffle); box-sizing: border-box; }
+        .container { width: 100%; max-width: 480px; background: #ffffff; padding: 30px; border-radius: 20px; box-shadow: 0 12px 35px rgba(92,58,33,0.18); border: 3px solid var(--waffle); box-sizing: border-box; }
         
         .logo-container { text-align: center; margin-bottom: 10px; }
         .logo-container img { width: 110px; height: 110px; border-radius: 50%; border: 4px solid var(--chocolat); box-shadow: 0 6px 15px rgba(0,0,0,0.15); object-fit: cover; }
@@ -30,14 +31,14 @@
         .btn:active { transform: translateY(0); }
         
         .btn-branch { background: linear-gradient(135deg, #5c3a21, #8d5524); box-shadow: 0 5px 15px rgba(92,58,33,0.3); }
-        .btn-action { background: linear-gradient(135deg, #27ae60, #2ecc71); font-size: 17px; box-shadow: 0 5px 15px rgba(39,174,96,0.3); }
+        .btn-qr-scan { background: linear-gradient(135deg, #27ae60, #2ecc71); font-size: 17px; box-shadow: 0 5px 15px rgba(39,174,96,0.3); }
         .btn-back { background: linear-gradient(135deg, #7f8c8d, #95a5a6); box-shadow: 0 5px 15px rgba(127,140,141,0.3); }
 
-        select, input, textarea { width: 100%; padding: 14px; margin: 8px 0 16px 0; border: 2px solid #e8d7c1; border-radius: 12px; box-sizing: border-box; background: #fdfbf7; font-size: 15px; color: #333; transition: 0.2s; }
+        select, input, textarea { width: 100%; padding: 14px; margin: 8px 0 16px 0; border: 2px solid #e8d7c1; border-radius: 12px; box-sizing: border-box; background: #fdfbf7; font-size: 15px; color: #333; }
         select:focus, input:focus, textarea:focus { border-color: var(--chocolat); outline: none; background: #fff; }
         
         .hidden { display: none !important; }
-        .card { background: #fffaf4; padding: 18px; border-radius: 14px; margin-bottom: 15px; border-left: 6px solid var(--chocolat); box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-top: 1px solid #f2e4d3; border-right: 1px solid #f2e4d3; border-bottom: 1px solid #f2e4d3; }
+        .card { background: #fffaf4; padding: 18px; border-radius: 14px; margin-bottom: 15px; border-left: 6px solid var(--chocolat); box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid #f2e4d3; }
         .msg-box { background: #fef5d1; color: #8a6d15; padding: 14px; border-radius: 12px; margin-bottom: 15px; font-size: 14px; border: 1px solid #f9c74f; font-weight: 500; }
         
         .alert-box { background: #fadbd8; color: var(--red); padding: 18px; border-radius: 14px; margin-bottom: 15px; font-weight: bold; text-align: center; border: 2px dashed var(--red); animation: pulse 1s infinite; font-size: 17px; box-shadow: 0 4px 15px rgba(192,57,43,0.2); }
@@ -47,12 +48,14 @@
         .stats { display: flex; justify-content: space-between; margin-bottom: 15px; }
         .stat-box { background: #f3e9dc; padding: 12px; border-radius: 12px; width: 48%; text-align: center; font-size: 13px; color: var(--chocolat); border: 1px solid #e4d0be; box-sizing: border-box; }
         
-        .log-list { font-size: 13px; max-height: 150px; overflow-y: auto; padding-left: 15px; margin: 0; text-align: left; color: #555; }
+        .log-list { font-size: 13px; max-height: 140px; overflow-y: auto; padding-left: 15px; margin: 0; text-align: left; color: #555; }
         .log-list li { margin-bottom: 6px; }
         
         table { width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 10px; background: #fff; border-radius: 8px; overflow: hidden; }
         table, th, td { border: 1px solid #e8d7c1; padding: 10px; text-align: center; }
         th { background: #f3e9dc; color: var(--chocolat); font-weight: 700; }
+        
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -102,13 +105,14 @@
             <p id="center-message" style="margin: 5px 0 0 0;">Yönetimden yeni duyuru yok.</p>
         </div>
 
-        <!-- İŞLEM & MOLA BUTONU -->
-        <button class="btn btn-action" onclick="performAction()">⚡ İşlem Yap </button>
+        <!-- QR KOD OKUTARAK GİRİŞ / MOLA VERME -->
+        <button class="btn btn-qr-scan" onclick="openQrScanner()">📷 Şube Giriş QR Kodunu Okut</button>
+        <button class="btn" style="background: linear-gradient(135deg, #e67e22, #d35400); padding: 12px; font-size: 15px;" onclick="performManualAction()">⚡ Manuel İşlem / Mola Seç</button>
 
         <!-- ÇALIŞMA SAATLERİ İSTATİSTİKLERİ -->
-        <div class="stats">
-            <div class="stat-box"><strong>Haftalık Çalışma:</strong><br><span id="weekly-hours" style="font-size: 16px; font-weight: bold; color: var(--chocolat);">0 Saat 0 Dk</span></div>
-            <div class="stat-box"><strong>Aylık Çalışma:</strong><br><span id="monthly-hours" style="font-size: 16px; font-weight: bold; color: var(--chocolat);">0 Saat 0 Dk</span></div>
+        <div class="stats" style="margin-top: 15px;">
+            <div class="stat-box"><strong>Haftalık Çalışma:</strong><br><span id="weekly-hours" style="font-size: 15px; font-weight: bold; color: var(--chocolat);">0 Saat 0 Dk</span></div>
+            <div class="stat-box"><strong>Aylık Çalışma:</strong><br><span id="monthly-hours" style="font-size: 15px; font-weight: bold; color: var(--chocolat);">0 Saat 0 Dk</span></div>
         </div>
 
         <!-- DETAYLI GÜNLÜK HAREKETLER VE MOLA SÜRELERİ -->
@@ -120,6 +124,14 @@
         </div>
 
         <button class="btn btn-back" onclick="logout()">Çıkış Yap / Ana Menü</button>
+    </div>
+
+    <!-- 3.B. QR KAMERA TARAYICI EKRANI -->
+    <div id="qr-scanner-screen" class="hidden">
+        <h3>📷 Giriş / Mola QR Okutma</h3>
+        <p style="text-align: center; font-size: 13px; color: #666;">Şubenin girişinde yer alan QR kodu kameraya gösterin.</p>
+        <div id="reader"></div>
+        <button class="btn btn-back" onclick="closeQrScanner()">Kamerayı Kapat / Geri Dön</button>
     </div>
 
     <!-- 4. MERKEZ YÖNETİM PANELİ -->
@@ -169,10 +181,10 @@
     let currentBranch = null;
     let globalMessage = "Yeni vardiya düzeni ve kurallarına dikkat ediniz.";
     
-    // Verileri kalıcı tutmak için localStorage entegrasyonu
     let userProfiles = JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || {};
     let globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || [];
     let countdownInterval = null;
+    let html5QrCode = null;
 
     function selectLocation(branchKey) {
         if (branchKey === 'MerkezYonetim') {
@@ -192,6 +204,7 @@
         document.getElementById("login-screen").classList.add("hidden");
         document.getElementById("admin-screen").classList.add("hidden");
         document.getElementById("panel-screen").classList.add("hidden");
+        document.getElementById("qr-scanner-screen").classList.add("hidden");
         document.getElementById("main-selection-screen").classList.remove("hidden");
         document.getElementById("staff-password").value = "";
     }
@@ -289,15 +302,55 @@
         }
     }
 
-    function performAction() {
-        let chosenAction = prompt("İşlem Seçiniz:\n1 - İşe Giriş\n2 - Yemek Molası Çıkış (45 dk)\n3 - Yemek Molası Dönüş\n4 - Normal Mola Çıkış (15 dk)\n5 - Normal Mola Dönüş\n6 - İşten Çıkış", "1");
-        
+    function openQrScanner() {
+        document.getElementById("panel-screen").classList.add("hidden");
+        document.getElementById("qr-scanner-screen").classList.remove("hidden");
+
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            qrCodeMessage => {
+                // QR okutulduğunda başarılı işleme yönlendir
+                closeQrScanner();
+                processActionCode("1"); // QR okutma varsayılan olarak İşe Giriş tetikler
+            },
+            errorMessage => {}
+        ).catch(err => {
+            alert("Kamera başlatılamadı: " + err);
+            closeQrScanner();
+        });
+    }
+
+    function closeQrScanner() {
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                document.getElementById("qr-scanner-screen").classList.add("hidden");
+                document.getElementById("panel-screen").classList.remove("hidden");
+            }).catch(err => {
+                document.getElementById("qr-scanner-screen").classList.add("hidden");
+                document.getElementById("panel-screen").classList.remove("hidden");
+            });
+        } else {
+            document.getElementById("qr-scanner-screen").classList.add("hidden");
+            document.getElementById("panel-screen").classList.remove("hidden");
+        }
+    }
+
+    function performManualAction() {
+        let chosenAction = prompt("İşlem Seçiniz:\n1 - İşe Giriş (QR Onaylı)\n2 - Yemek Molası Çıkış (45 dk)\n3 - Yemek Molası Dönüş\n4 - Normal Mola Çıkış (15 dk)\n5 - Normal Mola Dönüş\n6 - İşten Çıkış", "1");
+        if (chosenAction) {
+            processActionCode(chosenAction);
+        }
+    }
+
+    function processActionCode(chosenAction) {
         let timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         let actionName = "";
         let durationMins = 0;
 
         if (chosenAction === "1") {
-            actionName = "İşe Giriş";
+            actionName = "QR Giriş / İşe Başlama";
             userProfiles[currentUser].lastInTime = new Date().getTime();
         } else if (chosenAction === "2") {
             actionName = "Yemek Molası Çıkış (45 dk)";
@@ -329,7 +382,6 @@
 
         alert(actionName + " başarıyla kaydedildi!");
 
-        // Canlı Geri Sayım & Süre Bitimi Paneli
         if (durationMins > 0) {
             if (countdownInterval) clearInterval(countdownInterval);
             let targetTime = new Date().getTime() + (durationMins * 60 * 1000);
