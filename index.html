@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sweet Waffle - Personel, QR ve Merkez Yönetim</title>
+    <title>Sweet Waffle - GPS & QR Konum Kontrollü Personel Sistemi</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#5c3a21">
     <!-- QR Kütüphanesi (Html5-Qrcode) -->
@@ -34,7 +34,6 @@
         .btn-qr-scan { background: linear-gradient(135deg, #27ae60, #2ecc71); font-size: 16px; box-shadow: 0 4px 12px rgba(39,174,96,0.3); }
         .btn-back { background: linear-gradient(135deg, #7f8c8d, #95a5a6); box-shadow: 0 4px 12px rgba(127,140,141,0.3); }
 
-        /* İşlem Butonları Izgarası (Grid) */
         .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
         .action-btn { padding: 11px 8px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; color: white; text-align: center; box-shadow: 0 3px 8px rgba(0,0,0,0.15); transition: 0.2s; }
         .action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
@@ -117,8 +116,8 @@
             <p id="center-message" style="margin: 4px 0 0 0;">Yönetimden yeni duyuru yok.</p>
         </div>
 
-        <!-- QR KOD OKUTMA BUTONU -->
-        <button class="btn btn-qr-scan" onclick="openQrScanner()">📷 QR Kod Okutarak Giriş Yap</button>
+        <!-- GPS KONTROLLÜ QR KOD OKUTMA BUTONU -->
+        <button class="btn btn-qr-scan" onclick="openQrScannerWithGpsCheck()">📍📷 GPS Konumlu QR Giriş Okut</button>
 
         <!-- DOĞRUDAN TELEFON SAATİNİ ALAN İŞLEM BUTONLARI -->
         <div class="card" style="padding: 10px; margin-bottom: 12px;">
@@ -153,7 +152,7 @@
     <!-- 3.B. QR KAMERA TARAYICI EKRANI -->
     <div id="qr-scanner-screen" class="hidden">
         <h3>📷 Kamera ile QR Okut</h3>
-        <p style="text-align: center; font-size: 13px; color: #666;">Şubenin QR kodunu kameraya gösterin.</p>
+        <p style="text-align: center; font-size: 13px; color: #666;">Şubenin konum doğrulamalı QR kodunu okutun.</p>
         <div id="reader"></div>
         <button class="btn btn-back" onclick="closeQrScanner()">Kamerayı Kapat</button>
     </div>
@@ -196,9 +195,9 @@
 
 <script>
     const database = {
-        "Kurtköy": [{ name: "Nesrin POLAT", pass: "1234" }, { name: "Mehmet Demir", pass: "1234" }],
-        "Soğanlık": [{ name: "Can Çelik", pass: "1234" }, { name: "Elif Demir", pass: "1234" }],
-        "Yeni": [{ name: "Burak Şahin", pass: "1234" }, { name: "Zeynep Koç", pass: "1234" }]
+        "Kurtköy": { staff: [{ name: "Nesrin POLAT", pass: "1234" }, { name: "Mehmet Demir", pass: "1234" }], lat: 40.9412, lng: 29.3125 },
+        "Soğanlık": { staff: [{ name: "Can Çelik", pass: "1234" }, { name: "Elif Demir", pass: "1234" }], lat: 40.9085, lng: 29.1912 },
+        "Yeni": { staff: [{ name: "Burak Şahin", pass: "1234" }, { name: "Zeynep Koç", pass: "1234" }], lat: 41.0082, lng: 28.9784 }
     };
 
     let currentUser = null;
@@ -236,8 +235,8 @@
     function loadStaff(branch) {
         const staffSelect = document.getElementById("staff-select");
         staffSelect.innerHTML = '<option value="">Personel Seçiniz...</option>';
-        if (database[branch]) {
-            database[branch].forEach(emp => {
+        if (database[branch] && database[branch].staff) {
+            database[branch].staff.forEach(emp => {
                 let opt = document.createElement("option");
                 opt.value = emp.name;
                 opt.innerText = emp.name;
@@ -255,7 +254,7 @@
             return;
         }
 
-        const empList = database[currentBranch];
+        const empList = database[currentBranch].staff;
         const emp = empList.find(e => e.name === staff && e.pass === pass);
 
         if (emp) {
@@ -326,7 +325,41 @@
         }
     }
 
-    function openQrScanner() {
+    // GPS Konum Doğrulamalı QR Okutma Başlatıcı
+    function openQrScannerWithGpsCheck() {
+        if (!navigator.geolocation) {
+            alert("Tarayıcınız konum (GPS) desteklemiyor.");
+            return;
+        }
+
+        alert("Konumunuz alınıyor, lütfen bekleyin...");
+
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                let userLat = position.coords.latitude;
+                let userLng = position.coords.longitude;
+                let branchData = database[currentBranch];
+
+                // Mesafe hesaplama (Haversine formülü - metre cinsinden)
+                let distance = calculateDistance(userLat, userLng, branchData.lat, branchData.lng);
+
+                // 250 metrelik tolerans alanı (Şube içi kontrolü)
+                if (distance > 250) {
+                    alert(`Güvenlik Uyarısı: Şube konumunda değilsiniz! (Şubeye uzaklığınız: ${Math.round(distance)} metre). İşlem reddedildi.`);
+                    return;
+                }
+
+                // Konum doğruysa kamerayı aç
+                startCameraScanner();
+            },
+            error => {
+                alert("Konum alınamadı. Lütfen telefonunuzun GPS konum izinlerini açık olduğundan emin olun.");
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    }
+
+    function startCameraScanner() {
         document.getElementById("panel-screen").classList.add("hidden");
         document.getElementById("qr-scanner-screen").classList.remove("hidden");
 
@@ -336,13 +369,25 @@
             { fps: 10, qrbox: { width: 250, height: 250 } },
             qrCodeMessage => {
                 closeQrScanner();
-                triggerAction('QR ile İşe Giriş', 0);
+                triggerAction('GPS + QR Onaylı İşe Giriş', 0);
             },
             errorMessage => {}
         ).catch(err => {
             alert("Kamera başlatılamadı: " + err);
             closeQrScanner();
         });
+    }
+
+    // İki koordinat arası metre mesafesini hesaplayan Haversine fonksiyonu
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        let R = 6371e3; // Metre cinsinden Dünya yarıçapı
+        let dLat = (lat2 - lat1) * Math.PI / 180;
+        let dLon = (lon2 - lon1) * Math.PI / 180;
+        let a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
     }
 
     function closeQrScanner() {
@@ -360,7 +405,6 @@
         }
     }
 
-    // Doğrudan telefon saatini baz alan ana işlem tetikleyicisi
     function triggerAction(actionName, durationMins) {
         let timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         
@@ -369,7 +413,6 @@
         } else if (actionName.includes('Dönüş')) {
             userProfiles[currentUser].lastInTime = new Date().getTime();
         } else {
-            // Çıkış veya mola başlangıçlarında aktif çalışma süresini hesaba ekle ve sıfırla
             let p = userProfiles[currentUser];
             if (p && p.lastInTime) {
                 let workedMins = Math.floor((new Date().getTime() - p.lastInTime) / 60000);
@@ -387,7 +430,6 @@
 
         alert(actionName + " (Saat: " + timeStr + ") başarıyla kaydedildi!");
 
-        // Geri Sayım ve Süre Uyarısı
         if (durationMins > 0) {
             if (countdownInterval) clearInterval(countdownInterval);
             let targetTime = new Date().getTime() + (durationMins * 60 * 1000);
