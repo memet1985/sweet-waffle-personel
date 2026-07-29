@@ -15,23 +15,24 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         :root {
-            --primary: #5c3a21;
-            --primary-light: #8d5524;
-            --accent: #d35400;
-            --bg-gradient: linear-gradient(135deg, #fdfbf7, #f3e9dc);
-            --card-bg: #ffffff;
-            --text-main: #2c3e50;
-            --text-muted: #7f8c8d;
-            --border-color: #e8d7c1;
-            --radius: 14px;
+            --waffle-dark: #4a2e1b;
+            --waffle-main: #6f4e37;
+            --waffle-gold: #e6b85c;
+            --waffle-cream: #fff9f0;
+            --accent-orange: #e67e22;
+            --accent-green: #27ae60;
+            --accent-red: #e74c3c;
+            --accent-blue: #3498db;
+            --text-dark: #2c3e50;
+            --border-warm: #f0dec9;
         }
 
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: var(--bg-gradient);
+            background: linear-gradient(135deg, #fdfbf7 0%, #faebd7 100%);
             margin: 0;
             padding: 20px;
-            color: var(--text-main);
+            color: var(--text-dark);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -40,126 +41,119 @@
 
         .container {
             width: 100%;
-            max-width: 460px;
-            background: var(--card-bg);
+            max-width: 480px;
+            background: #ffffff;
             padding: 28px;
-            border-radius: 24px;
-            box-shadow: 0 16px 40px rgba(92, 58, 33, 0.12);
-            border: 2px solid var(--border-color);
+            border-radius: 26px;
+            box-shadow: 0 18px 45px rgba(95, 61, 38, 0.15);
+            border: 3px solid var(--waffle-gold);
             box-sizing: border-box;
         }
         
         .logo-container {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .logo-container img {
-            width: 85px;
-            height: 85px;
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
-            border: 3px solid var(--primary);
-            box-shadow: 0 6px 16px rgba(92,58,33,0.2);
+            border: 4px solid var(--waffle-gold);
+            box-shadow: 0 8px 20px rgba(111,78,55,0.25);
             object-fit: cover;
         }
         
         h2 {
-            color: var(--primary);
+            color: var(--waffle-dark);
             text-align: center;
             margin: 0 0 5px 0;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 800;
             letter-spacing: 0.5px;
         }
         h3 {
-            color: var(--primary);
+            color: var(--waffle-main);
             text-align: center;
-            font-size: 16px;
-            margin-bottom: 20px;
+            font-size: 17px;
+            margin-bottom: 18px;
             font-weight: 700;
         }
 
-        /* Modern & Minimal Buton Tasarımları */
+        /* Renkli ve Dinamik Buton Tasarımları */
         .btn {
             display: block;
             width: 100%;
-            padding: 12px 16px;
+            padding: 14px 18px;
             margin: 10px 0;
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--waffle-main), var(--waffle-dark));
             color: white;
             border: none;
-            border-radius: var(--radius);
-            font-size: 14px;
+            border-radius: 14px;
+            font-size: 15px;
             cursor: pointer;
             text-align: center;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(92, 58, 33, 0.2);
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 700;
+            box-shadow: 0 5px 15px rgba(111,78,55,0.3);
+            transition: all 0.25s ease;
         }
         .btn:hover {
-            background: var(--primary-light);
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(92, 58, 33, 0.3);
+            box-shadow: 0 8px 20px rgba(111,78,55,0.4);
+            filter: brightness(1.05);
         }
         .btn:active {
             transform: translateY(0);
         }
         
         .btn-branch {
-            background: #ffffff;
-            color: var(--primary);
-            border: 2px solid var(--border-color);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            background: linear-gradient(135deg, #ffffff, var(--waffle-cream));
+            color: var(--waffle-dark);
+            border: 2px solid var(--waffle-gold);
+            box-shadow: 0 4px 12px rgba(230,184,92,0.2);
             font-weight: 700;
         }
         .btn-branch:hover {
-            background: #fdfaf6;
-            border-color: var(--primary);
-            color: var(--primary);
+            background: #fff3db;
+            border-color: var(--waffle-main);
+            color: var(--waffle-dark);
         }
 
         .btn-qr-scan {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
-            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.25);
-            font-size: 15px;
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            box-shadow: 0 5px 15px rgba(46,204,113,0.35);
+            font-size: 16px;
         }
         .btn-back {
-            background: #f1f2f6;
-            color: #57606f;
-            box-shadow: none;
-            border: 1px solid #dfe4ea;
-        }
-        .btn-back:hover {
-            background: #dfe4ea;
-            color: #2f3542;
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            box-shadow: 0 4px 12px rgba(127,140,141,0.25);
         }
         .btn-danger {
-            background: #ff4757;
-            box-shadow: 0 3px 10px rgba(255, 71, 87, 0.25);
+            background: linear-gradient(135deg, #ff6b6b, #ee5253);
+            box-shadow: 0 4px 12px rgba(238,82,83,0.3);
         }
         .btn-warning {
-            background: #ffa502;
+            background: linear-gradient(135deg, #feca57, #ff9f43);
             color: #fff;
-            box-shadow: 0 3px 10px rgba(255, 165, 2, 0.25);
+            box-shadow: 0 4px 12px rgba(254,202,87,0.3);
         }
 
-        /* Dinamik ve Şık Hızlı İşlem Izgarası */
+        /* Canlı Hızlı İşlem Izgarası */
         .action-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin: 15px 0;
+            margin: 12px 0;
         }
         .action-btn {
-            padding: 12px 10px;
+            padding: 13px 10px;
             font-size: 13px;
-            font-weight: 600;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
             cursor: pointer;
-            background: #ffffff;
-            color: var(--text-main);
+            color: white;
             text-align: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
@@ -167,104 +161,104 @@
             gap: 6px;
         }
         .action-btn:hover {
-            border-color: var(--primary);
-            background: #fcf9f5;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            filter: brightness(1.1);
         }
         
-        .action-btn.primary-action {
-            background: var(--primary);
-            color: white;
-            border: none;
-            box-shadow: 0 4px 10px rgba(92,58,33,0.2);
-        }
-        .action-btn.primary-action:hover {
-            background: var(--primary-light);
-        }
+        .btn-work-in { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .btn-work-out { background: linear-gradient(135deg, #ff6b6b, #ee5253); }
+        .btn-meal-in { background: linear-gradient(135deg, #54a0ff, #2e86de); }
+        .btn-meal-out { background: linear-gradient(135deg, #ff9f43, #e67e22); }
+        .btn-break-in { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .btn-break-out { background: linear-gradient(135deg, #f39c12, #d35400); }
 
         select, input, textarea {
             width: 100%;
-            padding: 12px 14px;
+            padding: 13px 15px;
             margin: 8px 0 14px 0;
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius);
+            border: 2px solid var(--border-warm);
+            border-radius: 12px;
             box-sizing: border-box;
-            background: #fdfbf7;
+            background: var(--waffle-cream);
             font-size: 14px;
-            color: var(--text-main);
-            transition: border-color 0.2s;
+            color: var(--text-dark);
+            transition: all 0.2s;
         }
         select:focus, input:focus, textarea:focus {
-            border-color: var(--primary);
+            border-color: var(--waffle-main);
             outline: none;
             background: #fff;
+            box-shadow: 0 0 0 3px rgba(111,78,55,0.15);
         }
         
         .hidden { display: none !important; }
         
         .card {
-            background: #fcf9f5;
+            background: #fffaf5;
             padding: 16px;
-            border-radius: var(--radius);
+            border-radius: 16px;
             margin-bottom: 14px;
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--border-warm);
+            box-shadow: 0 4px 12px rgba(111,78,55,0.03);
         }
 
-        /* Bildirim ve Sayaç Alanları */
+        /* Bildirim ve Şık Sayaçlar */
         .msg-box {
-            background: #fff8e8;
-            color: #8a6d15;
+            background: linear-gradient(135deg, #fff3cd, #ffe8a1);
+            color: #856404;
             padding: 14px;
-            border-radius: var(--radius);
+            border-radius: 14px;
             margin-bottom: 14px;
             font-size: 13px;
-            border: 1px solid #fcecae;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            border: 1px solid #ffeeba;
+            box-shadow: 0 4px 12px rgba(133,100,4,0.1);
+            font-weight: 500;
         }
         .alert-box {
-            background: #ffe5e8;
-            color: #c0392b;
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            color: #721c24;
             padding: 14px;
-            border-radius: var(--radius);
+            border-radius: 14px;
             margin-bottom: 14px;
             font-weight: 700;
             text-align: center;
-            border: 2px dashed #c0392b;
+            border: 2px dashed #dc3545;
             animation: pulse 1.2s infinite;
             font-size: 14px;
         }
         .timer-box {
-            background: #e8f4fc;
-            color: #2980b9;
+            background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+            color: #0c5460;
             padding: 14px;
-            border-radius: var(--radius);
+            border-radius: 14px;
             margin-bottom: 14px;
             font-weight: 700;
             text-align: center;
-            border: 1px solid #b9d7ea;
+            border: 2px solid #17a2b8;
             font-size: 15px;
-            box-shadow: 0 2px 8px rgba(41,128,185,0.08);
+            box-shadow: 0 4px 12px rgba(23,162,184,0.15);
         }
         @keyframes pulse { 
             0% { transform: scale(1); } 
-            50% { transform: scale(1.01); } 
+            50% { transform: scale(1.02); } 
             100% { transform: scale(1); } 
         }
 
         .stats {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             margin-bottom: 14px;
         }
         .stat-box {
-            background: #f7f1e5;
+            background: linear-gradient(135deg, #fef6ec, #faebd7);
             padding: 12px;
-            border-radius: var(--radius);
+            border-radius: 14px;
             flex: 1;
             text-align: center;
             font-size: 12px;
-            color: var(--primary);
-            border: 1px solid var(--border-color);
+            color: var(--waffle-main);
+            border: 2px solid var(--waffle-gold);
+            font-weight: 600;
         }
         
         .log-list {
@@ -283,23 +277,23 @@
             border-collapse: collapse;
             margin-top: 8px;
             background: #fff;
-            border-radius: 8px;
+            border-radius: 10px;
             overflow: hidden;
         }
         table, th, td {
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border-warm);
             padding: 8px;
             text-align: center;
         }
         th {
-            background: #f7f1e5;
-            color: var(--primary);
+            background: #faebd7;
+            color: var(--waffle-dark);
             font-weight: 700;
         }
         
         #reader {
             width: 100%;
-            border-radius: var(--radius);
+            border-radius: 14px;
             overflow: hidden;
             margin-bottom: 14px;
         }
@@ -315,7 +309,7 @@
 
     <!-- 1. LOKASYON SEÇİMİ -->
     <div id="main-selection-screen">
-        <h3>Şube Seçimi</h3>
+        <h3>Şube Seçimi Yapınız</h3>
         <button class="btn btn-branch" onclick="selectLocation('MerkezYonetim')">🏢 Merkez (Yönetim & Takip)</button>
         <button class="btn btn-branch" onclick="selectLocation('Kurtköy')">📍 Kurtköy Şubesi</button>
         <button class="btn btn-branch" onclick="selectLocation('Soğanlık')">📍 Soğanlık Şubesi</button>
@@ -326,9 +320,9 @@
     <div id="admin-login-screen" class="hidden">
         <h3>🏢 Merkez Yönetim Girişi</h3>
         <label><strong>Yönetici Şifresi:</strong></label>
-        <input type="password" id="admin-password" placeholder="Şifre giriniz (Örn: 5678)">
-        <button class="btn" onclick="verifyAdminLogin()">Giriş Yap</button>
-        <button class="btn btn-back" onclick="goBackToMain()">← Geri Dön</button>
+        <input type="password" id="admin-password" placeholder="Şifrenizi girin (Örn: 5678)">
+        <button class="btn" onclick="verifyAdminLogin()">Panele Giriş Yap</button>
+        <button class="btn btn-back" onclick="goBackToMain()">← Ana Menüye Dön</button>
     </div>
 
     <!-- 2. ŞUBE PERSONEL GİRİŞ EKRANI -->
@@ -344,47 +338,45 @@
         <input type="password" id="staff-password" placeholder="Şifreniz (Örn: 1234)">
 
         <button class="btn" onclick="login()">Sisteme Giriş Yap</button>
-        <button class="btn btn-back" onclick="goBackToMain()">← Geri Dön</button>
+        <button class="btn btn-back" onclick="goBackToMain()">← Ana Menüye Dön</button>
     </div>
 
     <!-- 3. PERSONEL PANELİ -->
     <div id="panel-screen" class="hidden">
         <h3 id="welcome-title" style="margin-bottom: 2px;">Hoş Geldiniz</h3>
-        <p id="user-branch-info" style="text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 12px; font-weight: 600;"></p>
+        <p id="user-branch-info" style="text-align: center; color: var(--waffle-main); font-size: 13px; margin-bottom: 12px; font-weight: 700;"></p>
 
-        <!-- ÜST EKRAN: CANLI MOLA SÜRESİ / UYARI ALANI -->
+        <!-- ÜST KISIM: CANLI MOLA SÜRESİ / UYARI ALANI -->
         <div id="dynamic-alert-container"></div>
 
         <!-- MERKEZDEN ANLIK DUYURU / MESAJ KUTUSU -->
         <div id="center-msg-wrapper"></div>
 
         <!-- GPS KONTROLLÜ QR KOD OKUTMA BUTONU -->
-        <button class="btn btn-qr-scan" onclick="openQrScannerWithGpsCheck()">📍 Konumlu QR Kod Okut</button>
+        <button class="btn btn-qr-scan" onclick="openQrScannerWithGpsCheck()">📍📷 Konumlu QR Kod Okut</button>
 
-        <!-- HIZLI İŞLEM BUTONLARI (Dinamik & Minimal) -->
-        <div class="card" style="padding: 12px;">
-            <strong style="font-size: 12px; color: var(--primary); display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">⏱️ Hızlı İşlemler</strong>
+        <!-- HIZLI İŞLEM BUTONLARI -->
+        <div class="card" style="padding: 14px;">
+            <strong style="font-size: 12px; color: var(--waffle-dark); display: block; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">⏱️ Hızlı Çalışma İşlemleri</strong>
             <div class="action-grid">
-                <button class="action-btn primary-action" onclick="triggerAction('İşe Giriş', 0)">🟢 İşe Giriş</button>
-                <button class="action-btn" style="border-color: #ff4757; color: #ff4757;" onclick="triggerAction('İşten Çıkış', 0)">🔴 İşten Çıkış</button>
-                
-                <button class="action-btn" onclick="triggerAction('Yemek Molası Çıkış', 45)">🍽️ Yemek (45dk)</button>
-                <button class="action-btn" onclick="triggerAction('Yemek Molası Dönüş', 0)">🔙 Yemek Dönüş</button>
-                
-                <button class="action-btn" onclick="triggerAction('Normal Mola Çıkış', 15)">☕ Mola (15dk)</button>
-                <button class="action-btn" onclick="triggerAction('Normal Mola Dönüş', 0)">🔙 Mola Dönüş</button>
+                <button class="action-btn btn-work-in" onclick="triggerAction('İşe Giriş', 0)">🟢 İşe Giriş</button>
+                <button class="action-btn btn-work-out" onclick="triggerAction('İşten Çıkış', 0)">🔴 İşten Çıkış</button>
+                <button class="action-btn btn-meal-in" onclick="triggerAction('Yemek Molası Çıkış', 45)">🍽️ Yemek (45dk)</button>
+                <button class="action-btn btn-meal-out" onclick="triggerAction('Yemek Molası Dönüş', 0)">🔙 Yemek Dönüş</button>
+                <button class="action-btn btn-break-in" onclick="triggerAction('Normal Mola Çıkış', 15)">☕ Mola (15dk)</button>
+                <button class="action-btn btn-break-out" onclick="triggerAction('Normal Mola Dönüş', 0)">🔙 Mola Dönüş</button>
             </div>
         </div>
 
         <!-- ÇALIŞMA SAATLERİ İSTATİSTİKLERİ -->
         <div class="stats">
-            <div class="stat-box"><strong>Haftalık Çalışma</strong><br><span id="weekly-hours" style="font-size: 13px; font-weight: 700; color: var(--primary);">42s 30d</span></div>
-            <div class="stat-box"><strong>Aylık Çalışma</strong><br><span id="monthly-hours" style="font-size: 13px; font-weight: 700; color: var(--primary);">165s 0d</span></div>
+            <div class="stat-box"><strong>Haftalık Çalışma</strong><br><span id="weekly-hours" style="font-size: 14px; font-weight: 800; color: var(--waffle-dark);">42s 30d</span></div>
+            <div class="stat-box"><strong>Aylık Çalışma</strong><br><span id="monthly-hours" style="font-size: 14px; font-weight: 800; color: var(--waffle-dark);">165s 0d</span></div>
         </div>
 
         <!-- DETAYLI GÜNLÜK HAREKETLER -->
         <div class="card" style="margin-bottom: 14px;">
-            <strong style="font-size: 12px; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;">📋 Günlük Hareketlerim</strong>
+            <strong style="font-size: 12px; color: var(--waffle-dark); text-transform: uppercase; letter-spacing: 0.5px;">📋 Günlük Hareketlerim</strong>
             <ul class="log-list" id="today-logs" style="margin-top: 8px;">
                 <li>Kayıt bulunmuyor.</li>
             </ul>
@@ -395,8 +387,8 @@
 
     <!-- 3.B. QR KAMERA TARAYICI EKRANI -->
     <div id="qr-scanner-screen" class="hidden">
-        <h3>📷 QR Kod Okutma</h3>
-        <p style="text-align: center; font-size: 13px; color: var(--text-muted);">Şube çevresi (500m) doğrulandıktan sonra kamera açılır.</p>
+        <h3>📷 QR Kod Tarayıcı</h3>
+        <p style="text-align: center; font-size: 13px; color: #666;">Şube çevresi (500m) onaylandıktan sonra kamera açılır.</p>
         <div id="reader"></div>
         <button class="btn btn-back" onclick="closeQrScanner()">Kamerayı Kapat</button>
     </div>
@@ -404,16 +396,16 @@
     <!-- 4. MERKEZ YÖNETİM PANELİ -->
     <div id="admin-screen" class="hidden">
         <h3>🏢 Merkez Yönetim Paneli</h3>
-        <p style="text-align: center; color: var(--text-muted); font-size: 12px; margin-bottom: 14px;">Tüm şube hareketleri ve duyuru yönetimi.</p>
+        <p style="text-align: center; color: var(--waffle-main); font-size: 12px; margin-bottom: 14px; font-weight: 600;">Şubeler arası anlık takip ve yönetim merkezi.</p>
 
         <div class="card">
-            <strong style="font-size: 12px; color: var(--primary);">Personele Bildirim Gönder:</strong>
-            <textarea id="admin-msg-input" rows="2" placeholder="Şubelerdeki telefon ekranına düşecek duyuruyu yazın..."></textarea>
-            <button class="btn" style="margin: 0; padding: 10px;" onclick="sendBroadcastMessage()">Bildirimi Gönder</button>
+            <strong style="font-size: 12px; color: var(--waffle-dark);">Personele Bildirim Gönder:</strong>
+            <textarea id="admin-msg-input" rows="2" placeholder="Tüm personel telefonlarına anlık düşecek duyuruyu yazın..."></textarea>
+            <button class="btn" style="margin: 0; padding: 11px;" onclick="sendBroadcastMessage()">Bildirimi Yayınla</button>
         </div>
 
         <div class="card">
-            <strong style="font-size: 12px; color: var(--primary);">Aktif Duyurular:</strong>
+            <strong style="font-size: 12px; color: var(--waffle-dark);">Aktif Duyurular:</strong>
             <div id="admin-messages-list" style="max-height: 110px; overflow-y: auto; margin-top: 8px;">
                 <p style="font-size: 12px; color: #777;">Aktif duyuru yok.</p>
             </div>
@@ -423,7 +415,7 @@
         <div class="card">
             <div style="display: flex; gap: 8px; margin-bottom: 10px;">
                 <div style="flex: 1;">
-                    <label style="font-size: 11px; font-weight: bold; color: var(--primary);">Şube Filtre:</label>
+                    <label style="font-size: 11px; font-weight: bold; color: var(--waffle-dark);">Şube Filtrele:</label>
                     <select id="branch-filter" onchange="updateAdminTable()" style="width: 100%; margin: 4px 0 0 0; padding: 6px; font-size: 11px;">
                         <option value="Tümü">Tüm Şubeler</option>
                         <option value="Kurtköy">Kurtköy</option>
@@ -432,14 +424,14 @@
                     </select>
                 </div>
                 <div style="flex: 1;">
-                    <label style="font-size: 11px; font-weight: bold; color: var(--primary);">Personel Filtre:</label>
+                    <label style="font-size: 11px; font-weight: bold; color: var(--waffle-dark);">Personel Filtrele:</label>
                     <select id="staff-filter" onchange="updateAdminTable()" style="width: 100%; margin: 4px 0 0 0; padding: 6px; font-size: 11px;">
                         <option value="Tümü">Tüm Personeller</option>
                     </select>
                 </div>
             </div>
 
-            <div style="max-height: 150px; overflow-y: auto;">
+            <div style="max-height: 160px; overflow-y: auto;">
                 <table>
                     <thead>
                         <tr>
@@ -452,7 +444,7 @@
                     </thead>
                     <tbody id="admin-log-table">
                         <tr>
-                            <td colspan="5">Kayıt yok.</td>
+                            <td colspan="5">Kayıt bulunmuyor.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -481,6 +473,7 @@
     let currentBranch = null;
     let countdownInterval = null;
     let html5QrCode = null;
+    window.globalLogsCache = [];
 
     window.addEventListener('DOMContentLoaded', () => {
         setupRealtimeSubscriptions();
@@ -560,7 +553,7 @@
     async function sendBroadcastMessage() {
         const msgText = document.getElementById("admin-msg-input").value;
         if (!msgText) {
-            alert("Lütfen bir mesaj yazın.");
+            alert("Lütfen bir duyuru mesajı yazın.");
             return;
         }
 
@@ -569,7 +562,7 @@
             .insert([{ text: msgText }]);
 
         if (error) {
-            alert("Mesaj gönderilemedi: " + error.message);
+            alert("Gönderilemedi: " + error.message);
         } else {
             document.getElementById("admin-msg-input").value = "";
             alert("Bildirim tüm telefonlara başarıyla iletildi!");
@@ -597,7 +590,7 @@
             const { error } = await supabaseClient
                 .from('logs')
                 .delete()
-                .eq('id', id);
+                .eq('id', String(id));
 
             if (error) {
                 alert("Silinemedi: " + error.message);
@@ -608,20 +601,26 @@
     }
 
     async function editLog(id) {
-        let newAction = prompt("İşlem adını düzenleyin:");
-        let newTime = prompt("Saati düzenleyin (Örn: 08:30:00):");
+        let logItem = (window.globalLogsCache || []).find(l => String(l.id) === String(id));
+        let currentActionVal = logItem ? logItem.action : "";
+        let currentTimeVal = logItem ? logItem.time : "";
 
-        if (newAction !== null && newTime !== null) {
-            const { error } = await supabaseClient
-                .from('logs')
-                .update({ action: newAction, time: newTime })
-                .eq('id', id);
+        let newAction = prompt("İşlem adını düzenleyin:", currentActionVal);
+        if (newAction === null) return;
 
-            if (error) {
-                alert("Güncellenemedi: " + error.message);
-            } else {
-                await fetchAllData();
-            }
+        let newTime = prompt("Saati düzenleyin (Örn: 08:30:00):", currentTimeVal);
+        if (newTime === null) return;
+
+        const { error } = await supabaseClient
+            .from('logs')
+            .update({ action: newAction, time: newTime })
+            .eq('id', String(id));
+
+        if (error) {
+            alert("Güncellenemedi: " + error.message);
+        } else {
+            await fetchAllData();
+            alert("Kayıt başarıyla güncellendi.");
         }
     }
 
@@ -646,7 +645,7 @@
             document.getElementById("admin-screen").classList.remove("hidden");
             fetchAllData();
         } else {
-            alert("Hatalı Merkez Şifresi!");
+            alert("Hatalı Yönetici Şifresi!");
         }
     }
 
@@ -769,7 +768,7 @@
                 let distance = calculateDistance(userLat, userLng, branchData.lat, branchData.lng);
 
                 if (distance > 500) {
-                    alert(`Güvenlik Uyarısı: Şube konumunda değilsiniz! Uzaklık: ${Math.round(distance)}m (Sınır: 500m).`);
+                    alert(`Güvenlik Uyarısı: Şube konumunda değilsiniz! Uzaklık: ${Math.round(distance)}m (Max Sınır: 500m).`);
                     return;
                 }
 
@@ -869,7 +868,7 @@
         } else {
             if (countdownInterval) clearInterval(countdownInterval);
             document.getElementById("dynamic-alert-container").innerHTML = `
-                <div style="background: #eafaf1; color: #27ae60; padding: 12px; border-radius: var(--radius); margin-bottom: 14px; text-align: center; font-weight: 600; font-size: 13px; border: 1px solid #d4efdf;">
+                <div style="background: #eafaf1; color: #27ae60; padding: 12px; border-radius: 14px; margin-bottom: 14px; text-align: center; font-weight: 700; font-size: 13px; border: 1px solid #d4efdf;">
                     ✅ ${actionName} başarıyla kaydedildi.
                 </div>
             `;
@@ -885,7 +884,7 @@
         container.innerHTML = "";
         messages.forEach((msgObj) => {
             let div = document.createElement("div");
-            div.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 8px 10px; margin-bottom: 6px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px;";
+            div.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 8px 10px; margin-bottom: 6px; border-radius: 10px; border: 1px solid var(--border-warm); font-size: 12px;";
             div.innerHTML = `
                 <span style="flex-grow: 1; margin-right: 10px;">${msgObj.text}</span>
                 <button class="btn btn-danger" style="width: auto; padding: 4px 8px; margin: 0; font-size: 11px;" onclick="deleteMessage('${msgObj.id}')">Sil</button>
@@ -909,7 +908,7 @@
         }
 
         if (logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5">Kayıt yok.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5">Kayıt bulunmuyor.</td></tr>';
             return;
         }
         tbody.innerHTML = "";
