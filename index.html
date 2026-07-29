@@ -7,11 +7,9 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#5c3a21">
     
-    <!-- Telefonda Ana Ekrana Eklendiğinde ve Sekmede Görünecek Logo Bağlantısı -->
     <link rel="apple-touch-icon" href="logo.webp">
     <link rel="icon" href="logo.webp">
 
-    <!-- QR Kütüphanesi (Html5-Qrcode) -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         :root {
@@ -126,13 +124,13 @@
         <!-- CANLI GERİ SAYIM / SÜRE BİTTİ UYARI ALANI -->
         <div id="dynamic-alert-container"></div>
 
-        <!-- MERKEZDEN MESAJLAR (Varsa görünür) -->
+        <!-- MERKEZDEN MESAJLAR -->
         <div id="center-msg-wrapper"></div>
 
         <!-- GPS KONTROLLÜ QR KOD OKUTMA BUTONU -->
         <button class="btn btn-qr-scan" onclick="openQrScannerWithGpsCheck()">📍📷 GPS Konumlu QR Giriş Okut</button>
 
-        <!-- DOĞRUDAN TELEFON SAATİNİ ALAN İŞLEM BUTONLARI -->
+        <!-- HIZLI İŞLEM BUTONLARI -->
         <div class="card" style="padding: 10px; margin-bottom: 12px;">
             <strong style="font-size: 13px; color: var(--chocolat);">⏱️ Hızlı İşlem Butonları (Telefon Saati):</strong>
             <div class="action-grid">
@@ -165,7 +163,7 @@
     <!-- 3.B. QR KAMERA TARAYICI EKRANI -->
     <div id="qr-scanner-screen" class="hidden">
         <h3>📷 Kamera ile QR Okut</h3>
-        <p style="text-align: center; font-size: 13px; color: #666;">Şubenin konum doğrulamalı QR kodunu okutun.</p>
+        <p style="text-align: center; font-size: 13px; color: #666;">Şubenin 500 metre çapı içerisinden onaylı QR okutulabilir.</p>
         <div id="reader"></div>
         <button class="btn btn-back" onclick="closeQrScanner()">Kamerayı Kapat</button>
     </div>
@@ -173,7 +171,7 @@
     <!-- 4. MERKEZ YÖNETİM PANELİ -->
     <div id="admin-screen" class="hidden">
         <h3>🏢 Merkez Yönetim Paneli</h3>
-        <p style="text-align: center; color: #666; font-size: 12px; margin-bottom: 12px;">Tüm şubelerden gelen anlık personel hareketleri ve yönetim.</p>
+        <p style="text-align: center; color: #666; font-size: 12px; margin-bottom: 12px;">Tüm şubelerden gelen anlık hareketler.</p>
 
         <div class="card">
             <strong>Personele Duyuru Gönder:</strong>
@@ -215,28 +213,45 @@
 </div>
 
 <script>
-    // Plus Code koordinatlarına göre kesinleştirilmiş şube GPS verileri
-    // Kurtköy: W883+CH (Pendik, İstanbul) -> ~40.91417, 29.29917
-    // Soğanlık: W673+W7 (Kartal, İstanbul) -> ~40.9127, 29.1920
+    // Kurtköy (W883+CH) ve Soğanlık (W673+W7) Plus Code kesin koordinatları
     const database = {
         "Kurtköy": { staff: [{ name: "Nesrin POLAT", pass: "1234" }, { name: "Mehmet Demir", pass: "1234" }], lat: 40.91417, lng: 29.29917 },
-        "Soğanlık": { staff: [{ name: "Can Çelik", pass: "1234" }, { name: "Elif Demir", pass: "1234" }], lat: 40.9127, lng: 29.1920 },
-        "Yeni": { staff: [{ name: "Burak Şahin", pass: "1234" }, { name: "Zeynep Koç", pass: "1234" }], lat: 41.0082, lng: 28.9784 }
+        "Soğanlık": { staff: [{ name: "Can Çelik", pass: "1234" }, { name: "Elif Demir", pass: "1234" }], lat: 40.91270, lng: 29.19200 },
+        "Yeni": { staff: [{ name: "Burak Şahin", pass: "1234" }, { name: "Zeynep Koç", pass: "1234" }], lat: 41.00820, lng: 28.97840 }
     };
 
-    const ADMIN_PASS = "5678"; // Merkez Yönetim Şifresi
+    const ADMIN_PASS = "5678";
 
     let currentUser = null;
     let currentBranch = null;
     
-    // Verileri localStorage'dan çekme veya ilk değerleri atama
-    let globalMessages = JSON.parse(localStorage.getItem('sweet_waffle_messages')) || [
-        "Yeni vardiya düzeni ve kurallarına dikkat ediniz."
-    ];
-    let userProfiles = JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || {};
-    let globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || [];
+    // Ortak havuz senkronizasyonu için LocalStorage anahtarları
+    function getStoredData() {
+        return {
+            messages: JSON.parse(localStorage.getItem('sweet_waffle_messages')) || ["Yeni vardiya düzeni ve kurallarına dikkat ediniz."],
+            profiles: JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || {},
+            logs: JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || []
+        };
+    }
+
+    function saveDataToStorage(messages, profiles, logs) {
+        localStorage.setItem('sweet_waffle_messages', JSON.stringify(messages));
+        localStorage.setItem('sweet_waffle_user_profiles', JSON.stringify(profiles));
+        localStorage.setItem('sweet_waffle_global_logs', JSON.stringify(logs));
+    }
+
     let countdownInterval = null;
     let html5QrCode = null;
+
+    // Sayfa odaklandığında veya veri değiştiğinde arayüzü güncel tutma (Senkronizasyon)
+    window.addEventListener('storage', function(e) {
+        renderUserMessages();
+        updateUserPanelUI();
+        if(!document.getElementById("admin-screen").classList.contains("hidden")) {
+            updateAdminTable();
+            updateAdminMessagesList();
+        }
+    });
 
     function selectLocation(branchKey) {
         if (branchKey === 'MerkezYonetim') {
@@ -302,10 +317,10 @@
 
         if (emp) {
             currentUser = emp.name;
-            userProfiles = JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || {};
-            if (!userProfiles[currentUser]) {
-                userProfiles[currentUser] = { totalMinutes: 1200, logs: [], lastInTime: null };
-                saveData();
+            let data = getStoredData();
+            if (!data.profiles[currentUser]) {
+                data.profiles[currentUser] = { totalMinutes: 1200, logs: [], lastInTime: null };
+                saveDataToStorage(data.messages, data.profiles, data.logs);
             }
 
             document.getElementById("login-screen").classList.add("hidden");
@@ -322,12 +337,12 @@
 
     function logout() {
         if (currentUser) {
-            userProfiles = JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || userProfiles;
-            if (userProfiles[currentUser] && userProfiles[currentUser].lastInTime) {
-                let workedMins = Math.floor((new Date().getTime() - userProfiles[currentUser].lastInTime) / 60000);
-                userProfiles[currentUser].totalMinutes += workedMins;
-                userProfiles[currentUser].lastInTime = null;
-                saveData();
+            let data = getStoredData();
+            if (data.profiles[currentUser] && data.profiles[currentUser].lastInTime) {
+                let workedMins = Math.floor((new Date().getTime() - data.profiles[currentUser].lastInTime) / 60000);
+                data.profiles[currentUser].totalMinutes += workedMins;
+                data.profiles[currentUser].lastInTime = null;
+                saveDataToStorage(data.messages, data.profiles, data.logs);
             }
         }
 
@@ -340,17 +355,11 @@
         document.getElementById("main-selection-screen").classList.remove("hidden");
     }
 
-    function saveData() {
-        localStorage.setItem('sweet_waffle_user_profiles', JSON.stringify(userProfiles));
-        localStorage.setItem('sweet_waffle_global_logs', JSON.stringify(globalLogs));
-        localStorage.setItem('sweet_waffle_messages', JSON.stringify(globalMessages));
-    }
-
     function renderUserMessages() {
         const container = document.getElementById("center-msg-wrapper");
-        globalMessages = JSON.parse(localStorage.getItem('sweet_waffle_messages')) || [];
+        let data = getStoredData();
 
-        if (globalMessages.length === 0) {
+        if (data.messages.length === 0) {
             container.innerHTML = `
                 <div class="msg-box">
                     <strong>📢 Merkezden Duyuru:</strong>
@@ -361,7 +370,7 @@
         }
 
         container.innerHTML = "";
-        globalMessages.forEach((msg) => {
+        data.messages.forEach((msg) => {
             let box = document.createElement("div");
             box.className = "msg-box";
             box.innerHTML = `
@@ -377,8 +386,8 @@
     function updateUserPanelUI() {
         if (!currentUser) return;
         
-        userProfiles = JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || userProfiles;
-        let profile = userProfiles[currentUser];
+        let data = getStoredData();
+        let profile = data.profiles[currentUser];
         if (!profile) return;
 
         let totalMins = profile.totalMinutes;
@@ -394,7 +403,7 @@
 
         const list = document.getElementById("today-logs");
         if (profile.logs.length === 0) {
-            list.innerHTML = "<li>Henüz kayıt bulun bulunmuyor.</li>";
+            list.innerHTML = "<li>Henüz kayıt bulunmuyor.</li>";
         } else {
             list.innerHTML = "";
             profile.logs.forEach(logText => {
@@ -405,14 +414,14 @@
         }
     }
 
-    // GPS Konum Doğrulamalı QR Okutma Başlatıcı (Test ve Bilgisayar ortamı toleransı artırıldı)
+    // GPS 500 Metre Çap Sınırı Kontrolü
     function openQrScannerWithGpsCheck() {
         if (!navigator.geolocation) {
             alert("Tarayıcınız konum (GPS) desteklemiyor.");
             return;
         }
 
-        alert("Konumunuz alınıyor, lütfen bekleyin...");
+        alert("Konumunuz alınıyor, şube mesafesi kontrol ediliyor...");
 
         navigator.geolocation.getCurrentPosition(
             position => {
@@ -422,18 +431,16 @@
 
                 let distance = calculateDistance(userLat, userLng, branchData.lat, branchData.lng);
 
-                // Bilgisayardan test ederken veya tarayıcı merkezi konum veriyorsa sorun olmaması için sınır 5000 metreye (5km) çıkarıldı
-                if (distance > 5000) {
-                    alert(`Güvenlik Uyarısı: Şube konumunda değilsiniz! (Şubeye uzaklığınız: ${Math.round(distance)} metre). İşlem reddedildi.`);
+                // İstediğiniz gibi 500 metre çap sınırı
+                if (distance > 500) {
+                    alert(`Güvenlik Uyarısı: Şube konumunda değilsiniz! Şubeye uzaklığınız: ${Math.round(distance)} metre (İzin verilen max sınır: 500 metre). İşlem reddedildi.`);
                     return;
                 }
 
                 startCameraScanner();
             },
             error => {
-                // Konum izni verilemediyse veya masaüstü bilgisayar GPS veremiyorsa akışın aksamaması için doğrudan kameraya yönlendiriyoruz
-                alert("GPS konumu tam alınamadı (Masaüstü/Tarayıcı kısıtı). Kamera doğrulamasına geçiliyor...");
-                startCameraScanner();
+                alert("Konum alınamadı. GPS servislerinin açık olduğundan emin olun.");
             },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
@@ -487,19 +494,18 @@
     function triggerAction(actionName, durationMins) {
         let timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         
-        userProfiles = JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || {};
-        globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || [];
+        let data = getStoredData();
 
-        if (!userProfiles[currentUser]) {
-            userProfiles[currentUser] = { totalMinutes: 1200, logs: [], lastInTime: null };
+        if (!data.profiles[currentUser]) {
+            data.profiles[currentUser] = { totalMinutes: 1200, logs: [], lastInTime: null };
         }
 
         if (actionName.includes('Giriş') && !actionName.includes('Yemek')) {
-            userProfiles[currentUser].lastInTime = new Date().getTime();
+            data.profiles[currentUser].lastInTime = new Date().getTime();
         } else if (actionName.includes('Dönüş')) {
-            userProfiles[currentUser].lastInTime = new Date().getTime();
+            data.profiles[currentUser].lastInTime = new Date().getTime();
         } else {
-            let p = userProfiles[currentUser];
+            let p = data.profiles[currentUser];
             if (p && p.lastInTime) {
                 let workedMins = Math.floor((new Date().getTime() - p.lastInTime) / 60000);
                 p.totalMinutes += workedMins;
@@ -508,12 +514,14 @@
         }
 
         let fullLog = `${actionName} - ${timeStr}`;
-        userProfiles[currentUser].logs.unshift(fullLog);
-        globalLogs.unshift({ id: Date.now(), branch: currentBranch, user: currentUser, action: actionName, time: timeStr });
+        data.profiles[currentUser].logs.unshift(fullLog);
+        data.logs.unshift({ id: Date.now(), branch: currentBranch, user: currentUser, action: actionName, time: timeStr });
         
-        saveData();
+        saveDataToStorage(data.messages, data.profiles, data.logs);
         updateUserPanelUI();
-        updateAdminTable();
+        if(!document.getElementById("admin-screen").classList.contains("hidden")) {
+            updateAdminTable();
+        }
 
         alert(actionName + " (Saat: " + timeStr + ") başarıyla kaydedildi!");
 
@@ -558,32 +566,36 @@
             alert("Lütfen bir mesaj yazın.");
             return;
         }
-        globalMessages.unshift(msg);
+        let data = getStoredData();
+        data.messages.unshift(msg);
         document.getElementById("admin-msg-input").value = "";
-        saveData();
+        saveDataToStorage(data.messages, data.profiles, data.logs);
         updateAdminMessagesList();
-        alert("Mesaj başarıyla yayınlandı!");
+        renderUserMessages();
+        alert("Mesaj başarıyla yayınlandı ve tüm şubelere gönderildi!");
     }
 
     function deleteMessage(index) {
         if (confirm("Bu mesajı silmek istediğinize emin misiniz?")) {
-            globalMessages.splice(index, 1);
-            saveData();
+            let data = getStoredData();
+            data.messages.splice(index, 1);
+            saveDataToStorage(data.messages, data.profiles, data.logs);
             updateAdminMessagesList();
+            renderUserMessages();
             alert("Mesaj silindi.");
         }
     }
 
     function updateAdminMessagesList() {
-        globalMessages = JSON.parse(localStorage.getItem('sweet_waffle_messages')) || [];
+        let data = getStoredData();
         const container = document.getElementById("admin-messages-list");
         
-        if (globalMessages.length === 0) {
+        if (data.messages.length === 0) {
             container.innerHTML = '<p style="font-size: 12px; color: #777;">Aktif mesaj bulunmuyor.</p>';
             return;
         }
         container.innerHTML = "";
-        globalMessages.forEach((msg, idx) => {
+        data.messages.forEach((msg, idx) => {
             let div = document.createElement("div");
             div.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 8px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #e8d7c1; font-size: 12px;";
             div.innerHTML = `
@@ -595,8 +607,8 @@
     }
 
     function editLog(logId) {
-        globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || [];
-        let logItem = globalLogs.find(l => l.id === logId);
+        let data = getStoredData();
+        let logItem = data.logs.find(l => l.id === logId);
         if (!logItem) return;
 
         let newAction = prompt("İşlem adını düzenleyin:", logItem.action);
@@ -605,7 +617,7 @@
         if (newAction !== null && newTime !== null) {
             logItem.action = newAction;
             logItem.time = newTime;
-            saveData();
+            saveDataToStorage(data.messages, data.profiles, data.logs);
             updateAdminTable();
             alert("Kayıt başarıyla güncellendi.");
         }
@@ -613,23 +625,23 @@
 
     function deleteLog(logId) {
         if (confirm("Bu hareket kaydını silmek istediğinize emin misiniz?")) {
-            globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || [];
-            globalLogs = globalLogs.filter(l => l.id !== logId);
-            saveData();
+            let data = getStoredData();
+            data.logs = data.logs.filter(l => l.id !== logId);
+            saveDataToStorage(data.messages, data.profiles, data.logs);
             updateAdminTable();
             alert("Kayıt silindi.");
         }
     }
 
     function updateAdminTable() {
-        globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || [];
+        let data = getStoredData();
         const tbody = document.getElementById("admin-log-table");
-        if (globalLogs.length === 0) {
+        if (data.logs.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5">Henüz hareket yok.</td></tr>';
             return;
         }
         tbody.innerHTML = "";
-        globalLogs.forEach(log => {
+        data.logs.forEach(log => {
             let tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${log.branch}</td>
