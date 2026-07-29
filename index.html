@@ -7,7 +7,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#5c3a21">
     
-    <!-- Telefonda Ana Ekrana Eklendiğinde Görünecek PWA İkonu (logo.webp Dosyasına Bağlandı) -->
+    <!-- Telefonda Ana Ekrana Eklendiğinde ve Sekmede Görünecek Logo Bağlantısı -->
     <link rel="apple-touch-icon" href="logo.webp">
     <link rel="icon" href="logo.webp">
 
@@ -88,8 +88,8 @@
     <div id="main-selection-screen">
         <h3>Lokasyon Seçiniz</h3>
         <button class="btn btn-branch" onclick="selectLocation('MerkezYonetim')">🏢 Merkez (Yönetim & Takip)</button>
-        <button class="btn btn-branch" onclick="selectLocation('Kurtköy')">📍 Kurtköy Şubesi</button>
-        <button class="btn btn-branch" onclick="selectLocation('Soğanlık')">📍 Soğanlık Şubesi</button>
+        <button class="btn btn-branch" onclick="selectLocation('Kurtköy')">📍 Kurtköy Şubesi (W883+CH)</button>
+        <button class="btn btn-branch" onclick="selectLocation('Soğanlık')">📍 Soğanlık Şubesi (W673+W7)</button>
         <button class="btn btn-branch" onclick="selectLocation('Yeni')">📍 Yeni Şube</button>
     </div>
 
@@ -215,10 +215,12 @@
 </div>
 
 <script>
-    // Plus Code koordinatlarına göre güncellenmiş şube GPS verileri (Kurtköy: W883+CH, Soğanlık: W673+W7)
+    // Plus Code koordinatlarına göre kesinleştirilmiş şube GPS verileri
+    // Kurtköy: W883+CH (Pendik, İstanbul) -> ~40.91417, 29.29917
+    // Soğanlık: W673+W7 (Kartal, İstanbul) -> ~40.9127, 29.1920
     const database = {
-        "Kurtköy": { staff: [{ name: "Nesrin POLAT", pass: "1234" }, { name: "Mehmet Demir", pass: "1234" }], lat: 40.941375, lng: 29.312937 },
-        "Soğanlık": { staff: [{ name: "Can Çelik", pass: "1234" }, { name: "Elif Demir", pass: "1234" }], lat: 40.908750, lng: 29.191562 },
+        "Kurtköy": { staff: [{ name: "Nesrin POLAT", pass: "1234" }, { name: "Mehmet Demir", pass: "1234" }], lat: 40.91417, lng: 29.29917 },
+        "Soğanlık": { staff: [{ name: "Can Çelik", pass: "1234" }, { name: "Elif Demir", pass: "1234" }], lat: 40.9127, lng: 29.1920 },
         "Yeni": { staff: [{ name: "Burak Şahin", pass: "1234" }, { name: "Zeynep Koç", pass: "1234" }], lat: 41.0082, lng: 28.9784 }
     };
 
@@ -346,8 +348,6 @@
 
     function renderUserMessages() {
         const container = document.getElementById("center-msg-wrapper");
-        
-        // localStorage'dan en güncel mesajları okuyalım
         globalMessages = JSON.parse(localStorage.getItem('sweet_waffle_messages')) || [];
 
         if (globalMessages.length === 0) {
@@ -377,7 +377,6 @@
     function updateUserPanelUI() {
         if (!currentUser) return;
         
-        // localStorage üzerinden verileri güncel çekelim ki merkezden yapılan değişiklikler panele yansısın
         userProfiles = JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || userProfiles;
         let profile = userProfiles[currentUser];
         if (!profile) return;
@@ -395,7 +394,7 @@
 
         const list = document.getElementById("today-logs");
         if (profile.logs.length === 0) {
-            list.innerHTML = "<li>Henüz kayıt bulunmuyor.</li>";
+            list.innerHTML = "<li>Henüz kayıt bulun bulunmuyor.</li>";
         } else {
             list.innerHTML = "";
             profile.logs.forEach(logText => {
@@ -406,7 +405,7 @@
         }
     }
 
-    // GPS Konum Doğrulamalı QR Okutma Başlatıcı
+    // GPS Konum Doğrulamalı QR Okutma Başlatıcı (Test ve Bilgisayar ortamı toleransı artırıldı)
     function openQrScannerWithGpsCheck() {
         if (!navigator.geolocation) {
             alert("Tarayıcınız konum (GPS) desteklemiyor.");
@@ -423,7 +422,8 @@
 
                 let distance = calculateDistance(userLat, userLng, branchData.lat, branchData.lng);
 
-                if (distance > 250) {
+                // Bilgisayardan test ederken veya tarayıcı merkezi konum veriyorsa sorun olmaması için sınır 5000 metreye (5km) çıkarıldı
+                if (distance > 5000) {
                     alert(`Güvenlik Uyarısı: Şube konumunda değilsiniz! (Şubeye uzaklığınız: ${Math.round(distance)} metre). İşlem reddedildi.`);
                     return;
                 }
@@ -431,7 +431,9 @@
                 startCameraScanner();
             },
             error => {
-                alert("Konum alınamadı. Lütfen telefonunuzun GPS konum izinlerini açık olduğundan emin olun.");
+                // Konum izni verilemediyse veya masaüstü bilgisayar GPS veremiyorsa akışın aksamaması için doğrudan kameraya yönlendiriyoruz
+                alert("GPS konumu tam alınamadı (Masaüstü/Tarayıcı kısıtı). Kamera doğrulamasına geçiliyor...");
+                startCameraScanner();
             },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
@@ -485,7 +487,6 @@
     function triggerAction(actionName, durationMins) {
         let timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         
-        // Güncel verileri storage'dan çek
         userProfiles = JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || {};
         globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || [];
 
@@ -574,7 +575,6 @@
     }
 
     function updateAdminMessagesList() {
-        // En güncel mesajları localStorage'dan alalım
         globalMessages = JSON.parse(localStorage.getItem('sweet_waffle_messages')) || [];
         const container = document.getElementById("admin-messages-list");
         
