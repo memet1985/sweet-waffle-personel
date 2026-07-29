@@ -215,9 +215,10 @@
 </div>
 
 <script>
+    // Plus Code koordinatlarına göre güncellenmiş şube GPS verileri (Kurtköy: W883+CH, Soğanlık: W673+W7)
     const database = {
-        "Kurtköy": { staff: [{ name: "Nesrin POLAT", pass: "1234" }, { name: "Mehmet Demir", pass: "1234" }], lat: 40.9412, lng: 29.3125 },
-        "Soğanlık": { staff: [{ name: "Can Çelik", pass: "1234" }, { name: "Elif Demir", pass: "1234" }], lat: 40.9085, lng: 29.1912 },
+        "Kurtköy": { staff: [{ name: "Nesrin POLAT", pass: "1234" }, { name: "Mehmet Demir", pass: "1234" }], lat: 40.941375, lng: 29.312937 },
+        "Soğanlık": { staff: [{ name: "Can Çelik", pass: "1234" }, { name: "Elif Demir", pass: "1234" }], lat: 40.908750, lng: 29.191562 },
         "Yeni": { staff: [{ name: "Burak Şahin", pass: "1234" }, { name: "Zeynep Koç", pass: "1234" }], lat: 41.0082, lng: 28.9784 }
     };
 
@@ -340,6 +341,10 @@
 
     function renderUserMessages() {
         const container = document.getElementById("center-msg-wrapper");
+        
+        // localStorage'dan en güncel mesajları okuyalım
+        globalMessages = JSON.parse(localStorage.getItem('sweet_waffle_messages')) || [];
+
         if (globalMessages.length === 0) {
             container.innerHTML = `
                 <div class="msg-box">
@@ -366,7 +371,11 @@
 
     function updateUserPanelUI() {
         if (!currentUser) return;
+        
+        // localStorage üzerinden verileri güncel çekelim ki merkezden yapılan değişiklikler panele yansısın
+        userProfiles = JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || userProfiles;
         let profile = userProfiles[currentUser];
+        if (!profile) return;
 
         let totalMins = profile.totalMinutes;
         if (profile.lastInTime) {
@@ -471,6 +480,14 @@
     function triggerAction(actionName, durationMins) {
         let timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         
+        // Güncel verileri storage'dan çek
+        userProfiles = JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || userProfiles;
+        globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || globalLogs;
+
+        if (!userProfiles[currentUser]) {
+            userProfiles[currentUser] = { totalMinutes: 1200, logs: [], lastInTime: null };
+        }
+
         if (actionName.includes('Giriş') && !actionName.includes('Yemek')) {
             userProfiles[currentUser].lastInTime = new Date().getTime();
         } else if (actionName.includes('Dönüş')) {
@@ -487,6 +504,7 @@
         let fullLog = `${actionName} - ${timeStr}`;
         userProfiles[currentUser].logs.unshift(fullLog);
         globalLogs.unshift({ id: Date.now(), branch: currentBranch, user: currentUser, action: actionName, time: timeStr });
+        
         saveData();
         updateUserPanelUI();
         updateAdminTable();
@@ -551,7 +569,10 @@
     }
 
     function updateAdminMessagesList() {
+        // En güncel mesajları localStorage'dan alalım
+        globalMessages = JSON.parse(localStorage.getItem('sweet_waffle_messages')) || [];
         const container = document.getElementById("admin-messages-list");
+        
         if (globalMessages.length === 0) {
             container.innerHTML = '<p style="font-size: 12px; color: #777;">Aktif mesaj bulunmuyor.</p>';
             return;
@@ -569,6 +590,7 @@
     }
 
     function editLog(logId) {
+        globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || globalLogs;
         let logItem = globalLogs.find(l => l.id === logId);
         if (!logItem) return;
 
@@ -586,6 +608,7 @@
 
     function deleteLog(logId) {
         if (confirm("Bu hareket kaydını silmek istediğinize emin misiniz?")) {
+            globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || globalLogs;
             globalLogs = globalLogs.filter(l => l.id !== logId);
             saveData();
             updateAdminTable();
@@ -594,6 +617,7 @@
     }
 
     function updateAdminTable() {
+        globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || [];
         const tbody = document.getElementById("admin-log-table");
         if (globalLogs.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5">Henüz hareket yok.</td></tr>';
