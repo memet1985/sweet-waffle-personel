@@ -42,7 +42,6 @@
             align-items: center;
         }
 
-        /* Standart Mobil / Giriş Ekranı Konteyneri */
         .container {
             width: 100%;
             max-width: 480px;
@@ -54,7 +53,6 @@
             box-sizing: border-box;
         }
 
-        /* Merkez Yönetim İçin Geniş Profesyonel Ekran Konteyneri */
         .container-admin {
             width: 100%;
             max-width: 1200px !important;
@@ -206,28 +204,6 @@
             border: 1px solid #ffeeba;
             font-weight: 500;
         }
-        .alert-box {
-            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
-            color: #721c24;
-            padding: 14px;
-            border-radius: 14px;
-            margin-bottom: 14px;
-            font-weight: 700;
-            text-align: center;
-            border: 2px dashed #dc3545;
-            font-size: 14px;
-        }
-        .timer-box {
-            background: linear-gradient(135deg, #d1ecf1, #bee5eb);
-            color: #0c5460;
-            padding: 14px;
-            border-radius: 14px;
-            margin-bottom: 14px;
-            font-weight: 700;
-            text-align: center;
-            border: 2px solid #17a2b8;
-            font-size: 15px;
-        }
 
         .stats {
             display: flex;
@@ -329,6 +305,11 @@
         <div id="dynamic-alert-container"></div>
         <div id="center-msg-wrapper"></div>
 
+        <!-- Sayaç ve Geri Sayım Bilgilendirmesi -->
+        <div id="active-timer-box" class="hidden" style="background: linear-gradient(135deg, #d1ecf1, #bee5eb); color: #0c5460; padding: 12px; border-radius: 14px; margin-bottom: 14px; font-weight: 700; text-align: center; border: 2px solid #17a2b8; font-size: 13px;">
+            ⏳ Kalan Süre: <span id="countdown-display">00:00</span>
+        </div>
+
         <!-- Personelin Kendi Haftalık Vardiya ve İzin Programı Görüntüleme Alanı -->
         <div class="card" style="background: #fffdf9; border-color: var(--waffle-gold);">
             <strong style="font-size: 12px; color: var(--waffle-dark); display: block; margin-bottom: 6px; text-transform: uppercase;">📅 Haftalık Çalışma & İzin Programım</strong>
@@ -351,9 +332,9 @@
             <div class="action-grid">
                 <button class="action-btn btn-work-in" onclick="triggerAction('İşe Giriş', 0)">🟢 İşe Giriş</button>
                 <button class="action-btn btn-work-out" onclick="triggerAction('İşten Çıkış', 0)">🔴 İşten Çıkış</button>
-                <button class="action-btn btn-meal-in" onclick="triggerAction('Yemek Molası Çıkış', 45)">🍽️ Yemek (45dk)</button>
+                <button class="action-btn btn-meal-in" onclick="triggerAction('Yemek Molası Çıkış', 45)">🍽️ Yemek Çıkış</button>
                 <button class="action-btn btn-meal-out" onclick="triggerAction('Yemek Molası Dönüş', 0)">🔙 Yemek Dönüş</button>
-                <button class="action-btn btn-break-in" onclick="triggerAction('Normal Mola Çıkış', 15)">☕ Mola (15dk)</button>
+                <button class="action-btn btn-break-in" onclick="triggerAction('Normal Mola Çıkış', 15)">☕ Mola Çıkış</button>
                 <button class="action-btn btn-break-out" onclick="triggerAction('Normal Mola Dönüş', 0)">🔙 Mola Dönüş</button>
             </div>
         </div>
@@ -391,10 +372,8 @@
             </div>
         </div>
 
-        <!-- 2 Sütunlu Profesyonel Yönetim Yerleşimi -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             
-            <!-- Sol Kolon: Personel Dosyaları ve Haftalık Vardiya Planlayıcı -->
             <div>
                 <div class="card" style="border: 2px solid var(--waffle-gold); background: #fffdf9;">
                     <strong style="font-size: 13px; color: var(--waffle-dark); display: block; margin-bottom: 6px;">📁 Personel Dosyası & Detaylı Rapor</strong>
@@ -415,7 +394,6 @@
                     </div>
                 </div>
 
-                <!-- Şube & Personel Haftalık Vardiya / Çalışma Saatleri Planlayıcısı -->
                 <div class="card" style="background: #fffdf9;">
                     <strong style="font-size: 13px; color: var(--waffle-dark); display: block; margin-bottom: 6px;">⏰ Haftalık Çalışma Saatleri & İzin Planlayıcı</strong>
                     
@@ -439,16 +417,13 @@
                             <thead>
                                 <tr><th>Gün</th><th>Giriş</th><th>Çıkış</th><th>İzinli?</th></tr>
                             </thead>
-                            <tbody id="admin-weekly-shift-tbody">
-                                <!-- Günler dinamik yüklenir -->
-                            </tbody>
+                            <tbody id="admin-weekly-shift-tbody"></tbody>
                         </table>
                     </div>
                     <button class="btn" style="margin: 8px 0 0 0; padding: 10px; font-size: 12px;" onclick="saveStaffWeeklySchedule()">Haftalık Vardiya Planını Kaydet</button>
                 </div>
             </div>
 
-            <!-- Sağ Kolon: Duyurular ve Canlı Takip Akışı -->
             <div>
                 <div class="card">
                     <strong style="font-size: 13px; color: var(--waffle-dark);">📢 Personele Bildirim Gönder:</strong>
@@ -524,7 +499,21 @@
         setupRealtimeSubscriptions();
         fetchAllData();
         buildAdminShiftTableTemplate();
+        requestNotificationPermission();
+
+        // Sayfa yeniden açıldığında / odaklanıldığında anlık veri senkronizasyonu (Arka plandan dönme durumu)
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+                fetchAllData();
+            }
+        });
     });
+
+    function requestNotificationPermission() {
+        if ("Notification" in window && Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
+    }
 
     async function fetchAllData() {
         await fetchMessages();
@@ -535,10 +524,21 @@
     function setupRealtimeSubscriptions() {
         supabaseClient
             .channel('public-db-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => fetchMessages())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => {
+                fetchMessages();
+                if (payload.eventType === 'INSERT') {
+                    showBrowserNotification("Sweet Waffle - Yeni Duyuru", payload.new.text);
+                }
+            })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'logs' }, () => fetchLogs())
             .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, () => fetchSchedules())
             .subscribe();
+    }
+
+    function showBrowserNotification(title, body) {
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification(title, { body: body, icon: "logo.webp" });
+        }
     }
 
     async function fetchMessages() {
@@ -570,7 +570,10 @@
             data.forEach(item => {
                 window.globalSchedulesCache[item.staff_name] = item.schedule_data;
             });
-            if(currentUser) renderUserShiftView();
+            if(currentUser) {
+                renderUserShiftView();
+                updateUserWeeklyHoursSummary();
+            }
         }
     }
 
@@ -650,7 +653,6 @@
             };
         });
 
-        // Supabase upsert
         const { error } = await supabaseClient
             .from('schedules')
             .upsert([{ staff_name: staffName, schedule_data: scheduleData }], { onConflict: 'staff_name' });
@@ -686,6 +688,28 @@
             }
             tbody.appendChild(tr);
         });
+    }
+
+    function updateUserWeeklyHoursSummary() {
+        if (!currentUser) return;
+        let staffSchedule = window.globalSchedulesCache[currentUser];
+        let totalMinutes = 0;
+
+        if (staffSchedule) {
+            Object.values(staffSchedule).forEach(day => {
+                if (day && !day.isOff && day.in && day.out) {
+                    let [inH, inM] = day.in.split(':').map(Number);
+                    let [outH, outM] = day.out.split(':').map(Number);
+                    let diff = (outH * 60 + outM) - (inH * 60 + inM);
+                    if (diff > 0) totalMinutes += diff;
+                }
+            });
+        }
+
+        let hours = Math.floor(totalMinutes / 60);
+        let minutes = totalMinutes % 60;
+        document.getElementById("weekly-hours").innerText = `${hours}s ${minutes}d`;
+        document.getElementById("monthly-hours").innerText = `${hours * 4}s ${minutes}d`;
     }
 
     function updateStaffFilterOptions() {
@@ -889,6 +913,7 @@
             document.getElementById("user-branch-info").innerText = "Şube: " + currentBranch;
             fetchAllData();
             renderUserShiftView();
+            updateUserWeeklyHoursSummary();
             updateUserPanelUI();
         } else {
             alert("Hatalı şifre!");
@@ -976,7 +1001,37 @@
         let timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         const { error } = await supabaseClient.from('logs').insert([{ branch: currentBranch, user: currentUser, action: actionName, time: timeStr }]);
         if (error) { alert("Hata: " + error.message); return; }
+
+        if (durationMins > 0) {
+            startCountdown(durationMins);
+        } else {
+            if (countdownInterval) clearInterval(countdownInterval);
+            document.getElementById("active-timer-box").classList.add("hidden");
+        }
+
         await fetchAllData();
+    }
+
+    function startCountdown(durationMinutes) {
+        if (countdownInterval) clearInterval(countdownInterval);
+        let timerBox = document.getElementById("active-timer-box");
+        let display = document.getElementById("countdown-display");
+        timerBox.classList.remove("hidden");
+
+        let targetTime = Date.now() + durationMinutes * 60 * 1000;
+
+        countdownInterval = setInterval(() => {
+            let remaining = targetTime - Date.now();
+            if (remaining <= 0) {
+                clearInterval(countdownInterval);
+                display.innerText = "Süre Sona Erdi!";
+                showBrowserNotification("Sweet Waffle", "Molalarınız / Süreniz dolmuştur.");
+                return;
+            }
+            let mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+            let secs = Math.floor((remaining % (1000 * 60)) / 1000);
+            display.innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }, 1000);
     }
 
     function updateAdminMessagesList(messages) {
