@@ -57,7 +57,7 @@
         /* Merkez Yönetim İçin Geniş Profesyonel Ekran Konteyneri */
         .container-admin {
             width: 100%;
-            max-width: 1150px !important;
+            max-width: 1200px !important;
             background: #ffffff;
             padding: 35px;
             border-radius: 24px;
@@ -168,13 +168,13 @@
 
         select, input, textarea {
             width: 100%;
-            padding: 13px 15px;
-            margin: 8px 0 14px 0;
+            padding: 12px 14px;
+            margin: 6px 0 12px 0;
             border: 2px solid var(--border-warm);
             border-radius: 12px;
             box-sizing: border-box;
             background: var(--waffle-cream);
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-dark);
             transition: all 0.2s;
         }
@@ -267,7 +267,7 @@
         }
         table, th, td {
             border: 1px solid var(--border-warm);
-            padding: 10px;
+            padding: 8px;
             text-align: center;
         }
         th {
@@ -329,6 +329,21 @@
         <div id="dynamic-alert-container"></div>
         <div id="center-msg-wrapper"></div>
 
+        <!-- Personelin Kendi Haftalık Vardiya ve İzin Programı Görüntüleme Alanı -->
+        <div class="card" style="background: #fffdf9; border-color: var(--waffle-gold);">
+            <strong style="font-size: 12px; color: var(--waffle-dark); display: block; margin-bottom: 6px; text-transform: uppercase;">📅 Haftalık Çalışma & İzin Programım</strong>
+            <div style="max-height: 120px; overflow-y: auto;">
+                <table>
+                    <thead>
+                        <tr><th>Gün</th><th>Çalışma Saatleri</th><th>Durum</th></tr>
+                    </thead>
+                    <tbody id="user-shift-view-table">
+                        <tr><td colspan="3">Merkez henüz program tanımlamadı.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <button class="btn btn-qr-scan" onclick="openQrScannerWithGpsCheck()">📍📷 Konumlu QR Kod Okut</button>
 
         <div class="card" style="padding: 14px;">
@@ -369,7 +384,7 @@
     <!-- 4. MERKEZ YÖNETİM PANELİ (TAM EKRAN PROFESYONEL) -->
     <div id="admin-screen" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--waffle-gold); padding-bottom: 10px; margin-bottom: 18px;">
-            <h3 style="margin: 0; color: var(--waffle-dark); font-size: 22px;">🏢 Sweet Waffle - Profesyonel Merkez Yönetim Masası</h3>
+            <h3 style="margin: 0; color: var(--waffle-dark); font-size: 20px;">🏢 Sweet Waffle - Profesyonel Merkez Yönetim Masası</h3>
             <div>
                 <button class="btn btn-success" style="display:inline-block; width:auto; padding: 8px 14px; margin: 0 4px; font-size: 12px;" onclick="exportToExcel()">📊 Excel Çıktısı Al</button>
                 <button class="btn btn-danger" style="display:inline-block; width:auto; padding: 8px 14px; margin: 0 4px; font-size: 12px;" onclick="exportToPDF()">📑 PDF Raporu Al</button>
@@ -379,18 +394,17 @@
         <!-- 2 Sütunlu Profesyonel Yönetim Yerleşimi -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             
-            <!-- Sol Kolon: Personel Dosyaları ve Şube Çalışma Saatleri -->
+            <!-- Sol Kolon: Personel Dosyaları ve Haftalık Vardiya Planlayıcı -->
             <div>
                 <div class="card" style="border: 2px solid var(--waffle-gold); background: #fffdf9;">
-                    <strong style="font-size: 14px; color: var(--waffle-dark); display: block; margin-bottom: 8px;">📁 Personel Dosyası & Detaylı Rapor</strong>
-                    <label style="font-size: 12px; font-weight: bold; color: var(--waffle-main);">Personel Seçin:</label>
-                    <select id="admin-dossier-select" onchange="renderAdminStaffDossier()" style="margin-top: 4px; padding: 8px; font-size: 12px;">
+                    <strong style="font-size: 13px; color: var(--waffle-dark); display: block; margin-bottom: 6px;">📁 Personel Dosyası & Detaylı Rapor</strong>
+                    <select id="admin-dossier-select" onchange="renderAdminStaffDossier()" style="margin-top: 4px; padding: 7px; font-size: 12px;">
                         <option value="">Rapor için personel seçiniz...</option>
                     </select>
                     
-                    <div id="dossier-result-area" class="hidden" style="margin-top: 10px; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid var(--border-warm);">
-                        <div style="font-size: 12px; margin-bottom: 6px; font-weight: 700; color: var(--waffle-dark);" id="dossier-summary-text"></div>
-                        <div style="max-height: 110px; overflow-y: auto;">
+                    <div id="dossier-result-area" class="hidden" style="margin-top: 8px; background: #fff; padding: 8px; border-radius: 10px; border: 1px solid var(--border-warm);">
+                        <div style="font-size: 11px; margin-bottom: 4px; font-weight: 700; color: var(--waffle-dark);" id="dossier-summary-text"></div>
+                        <div style="max-height: 90px; overflow-y: auto;">
                             <table>
                                <thead>
                                     <tr><th>Şube</th><th>İşlem</th><th>Tarih/Saat</th></tr>
@@ -401,78 +415,83 @@
                     </div>
                 </div>
 
-                <!-- Şube Haftalık Çalışma Saatleri Belirleme Alanı -->
-                <div class="card">
-                    <strong style="font-size: 14px; color: var(--waffle-dark); display: block; margin-bottom: 8px;">⏰ Şube Haftalık Çalışma / Vardiya Ayarları</strong>
-                    <div style="display: flex; gap: 8px;">
+                <!-- Şube & Personel Haftalık Vardiya / Çalışma Saatleri Planlayıcısı -->
+                <div class="card" style="background: #fffdf9;">
+                    <strong style="font-size: 13px; color: var(--waffle-dark); display: block; margin-bottom: 6px;">⏰ Haftalık Çalışma Saatleri & İzin Planlayıcı</strong>
+                    
+                    <div style="display: flex; gap: 6px;">
                         <div style="flex: 1;">
-                            <label style="font-size: 11px; font-weight: bold;">Şube Seç:</label>
-                            <select id="target-branch-shift" style="margin-top:4px; padding: 6px; font-size: 12px;">
+                            <label style="font-size: 11px; font-weight: bold;">Şube:</label>
+                            <select id="shift-branch-select" onchange="populateShiftStaffSelect()" style="padding: 6px; font-size: 12px;">
                                 <option value="Kurtköy">Kurtköy</option>
                                 <option value="Soğanlık">Soğanlık</option>
                                 <option value="Yeni">Yeni Şube</option>
                             </select>
                         </div>
                         <div style="flex: 1;">
-                            <label style="font-size: 11px; font-weight: bold;">Haftalık Hedef Saat:</label>
-                            <input type="text" id="target-hours-input" placeholder="Örn: 45 Saat" style="margin-top:4px; padding: 6px; font-size: 12px;">
+                            <label style="font-size: 11px; font-weight: bold;">Personel:</label>
+                            <select id="shift-staff-select" style="padding: 6px; font-size: 12px;"></select>
                         </div>
                     </div>
-                    <button class="btn" style="margin: 6px 0 0 0; padding: 10px; font-size: 13px;" onclick="saveBranchShiftSettings()">Şube Çalışma Planını Kaydet</button>
+
+                    <div style="max-height: 180px; overflow-y: auto; margin-top: 6px;">
+                        <table>
+                            <thead>
+                                <tr><th>Gün</th><th>Giriş</th><th>Çıkış</th><th>İzinli?</th></tr>
+                            </thead>
+                            <tbody id="admin-weekly-shift-tbody">
+                                <!-- Günler dinamik yüklenir -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn" style="margin: 8px 0 0 0; padding: 10px; font-size: 12px;" onclick="saveStaffWeeklySchedule()">Haftalık Vardiya Planını Kaydet</button>
                 </div>
             </div>
 
-            <!-- Sağ Kolon: Duyurular ve Anlık Canlı Takip Akışı -->
+            <!-- Sağ Kolon: Duyurular ve Canlı Takip Akışı -->
             <div>
                 <div class="card">
-                    <strong style="font-size: 14px; color: var(--waffle-dark);">📢 Personele Bildirim Gönder:</strong>
+                    <strong style="font-size: 13px; color: var(--waffle-dark);">📢 Personele Bildirim Gönder:</strong>
                     <textarea id="admin-msg-input" rows="2" placeholder="Tüm personel telefonlarına anlık düşecek duyuruyu yazın..."></textarea>
-                    <button class="btn" style="margin: 0; padding: 10px; font-size: 13px;" onclick="sendBroadcastMessage()">Bildirimi Yayınla</button>
+                    <button class="btn" style="margin: 0; padding: 9px; font-size: 12px;" onclick="sendBroadcastMessage()">Bildirimi Yayınla</button>
                 </div>
 
                 <div class="card">
-                    <strong style="font-size: 14px; color: var(--waffle-dark);">📋 Aktif Duyurular:</strong>
-                    <div id="admin-messages-list" style="max-height: 90px; overflow-y: auto; margin-top: 6px;">
+                    <strong style="font-size: 13px; color: var(--waffle-dark);">📋 Aktif Duyurular:</strong>
+                    <div id="admin-messages-list" style="max-height: 110px; overflow-y: auto; margin-top: 6px;">
                         <p style="font-size: 12px; color: #777;">Aktif duyuru yok.</p>
                     </div>
                 </div>
-            </div>
 
-        </div>
+                <div class="card" style="margin-top: 10px;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 6px; align-items: center;">
+                        <strong style="font-size: 13px; color: var(--waffle-dark);">🔍 Şube ve Personel Denetimi</strong>
+                        <div style="display: flex; gap: 6px; margin-left: auto;">
+                            <select id="branch-filter" onchange="updateAdminTable()" style="margin: 0; padding: 5px; font-size: 11px; width: 120px;">
+                                <option value="Tümü">Tüm Şubeler</option>
+                                <option value="Kurtköy">Kurtköy</option>
+                                <option value="Soğanlık">Soğanlık</option>
+                                <option value="Yeni">Yeni Şube</option>
+                            </select>
+                            <select id="staff-filter" onchange="updateAdminTable()" style="margin: 0; padding: 5px; font-size: 11px; width: 120px;">
+                                <option value="Tümü">Tüm Personeller</option>
+                            </select>
+                        </div>
+                    </div>
 
-        <!-- Genişletilmiş Tüm Hareketler ve Filtre Tablosu -->
-        <div class="card" style="margin-top: 10px;">
-            <div style="display: flex; gap: 12px; margin-bottom: 10px; align-items: center;">
-                <strong style="font-size: 14px; color: var(--waffle-dark);">🔍 Şube ve Personel Hareket Denetimi</strong>
-                <div style="display: flex; gap: 8px; margin-left: auto;">
-                    <select id="branch-filter" onchange="updateAdminTable()" style="margin: 0; padding: 6px; font-size: 12px; width: 150px;">
-                        <option value="Tümü">Tüm Şubeler</option>
-                        <option value="Kurtköy">Kurtköy</option>
-                        <option value="Soğanlık">Soğanlık</option>
-                        <option value="Yeni">Yeni Şube</option>
-                    </select>
-                    <select id="staff-filter" onchange="updateAdminTable()" style="margin: 0; padding: 6px; font-size: 12px; width: 150px;">
-                        <option value="Tümü">Tüm Personeller</option>
-                    </select>
+                    <div style="max-height: 140px; overflow-y: auto;">
+                        <table>
+                            <thead>
+                                <tr><th>Şube</th><th>Personel</th><th>İşlem</th><th>Saat</th><th>İşlem</th></tr>
+                            </thead>
+                            <tbody id="admin-log-table">
+                                <tr><td colspan="5">Kayıt bulunmuyor.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <div style="max-height: 220px; overflow-y: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Şube</th>
-                            <th>Personel</th>
-                            <th>İşlem</th>
-                            <th>Saat</th>
-                            <th>Yönetim / İşlemler</th>
-                        </tr>
-                    </thead>
-                    <tbody id="admin-log-table">
-                        <tr><td colspan="5">Kayıt bulunmuyor.</td></tr>
-                    </tbody>
-                </table>
-            </div>
         </div>
 
         <button class="btn btn-back" style="margin-top: 15px;" onclick="goBackToMain()">← Ana Menüye Dön</button>
@@ -492,41 +511,38 @@
     };
 
     const ADMIN_PASS = "5678";
+    const DAYS_OF_WEEK = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
 
     let currentUser = null;
     let currentBranch = null;
     let countdownInterval = null;
     let html5QrCode = null;
     window.globalLogsCache = [];
+    window.globalSchedulesCache = {};
 
     window.addEventListener('DOMContentLoaded', () => {
         setupRealtimeSubscriptions();
         fetchAllData();
+        buildAdminShiftTableTemplate();
     });
 
     async function fetchAllData() {
         await fetchMessages();
         await fetchLogs();
+        await fetchSchedules();
     }
 
     function setupRealtimeSubscriptions() {
         supabaseClient
             .channel('public-db-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => {
-                fetchMessages();
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'logs' }, payload => {
-                fetchLogs();
-            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => fetchMessages())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'logs' }, () => fetchLogs())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, () => fetchSchedules())
             .subscribe();
     }
 
     async function fetchMessages() {
-        const { data, error } = await supabaseClient
-            .from('messages')
-            .select('*')
-            .order('created_at', { ascending: false });
-
+        const { data, error } = await supabaseClient.from('messages').select('*').order('created_at', { ascending: false });
         if (!error && data) {
             renderUserMessages(data);
             updateAdminMessagesList(data);
@@ -534,11 +550,7 @@
     }
 
     async function fetchLogs() {
-        const { data, error } = await supabaseClient
-            .from('logs')
-            .select('*')
-            .order('created_at', { ascending: false });
-
+        const { data, error } = await supabaseClient.from('logs').select('*').order('created_at', { ascending: false });
         if (!error && data) {
             window.globalLogsCache = data;
             updateStaffFilterOptions();
@@ -547,21 +559,141 @@
                 updateAdminTable();
                 renderAdminStaffDossier();
             }
-            if(currentUser) {
-                updateUserPanelUI();
-            }
+            if(currentUser) updateUserPanelUI();
         }
+    }
+
+    async function fetchSchedules() {
+        const { data, error } = await supabaseClient.from('schedules').select('*');
+        if (!error && data) {
+            window.globalSchedulesCache = {};
+            data.forEach(item => {
+                window.globalSchedulesCache[item.staff_name] = item.schedule_data;
+            });
+            if(currentUser) renderUserShiftView();
+        }
+    }
+
+    function buildAdminShiftTableTemplate() {
+        const tbody = document.getElementById("admin-weekly-shift-tbody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        DAYS_OF_WEEK.forEach((day, index) => {
+            let tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td style="font-weight:700; font-size:11px;">${day}</td>
+                <td><input type="time" id="in-time-${index}" value="09:00" style="margin:0; padding:4px; font-size:11px;"></td>
+                <td><input type="time" id="out-time-${index}" value="18:00" style="margin:0; padding:4px; font-size:11px;"></td>
+                <td><input type="checkbox" id="off-day-${index}" style="width:18px; height:18px; margin:0 auto; cursor:pointer;"></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        populateShiftStaffSelect();
+    }
+
+    function populateShiftStaffSelect() {
+        const branchSelect = document.getElementById("shift-branch-select");
+        const staffSelect = document.getElementById("shift-staff-select");
+        if (!branchSelect || !staffSelect) return;
+
+        const selectedBranch = branchSelect.value;
+        staffSelect.innerHTML = "";
+        if (database[selectedBranch] && database[selectedBranch].staff) {
+            database[selectedBranch].staff.forEach(emp => {
+                let opt = document.createElement("option");
+                opt.value = emp.name;
+                opt.innerText = emp.name;
+                staffSelect.appendChild(opt);
+            });
+        }
+        loadStaffExistingScheduleToAdminForm();
+        staffSelect.onchange = loadStaffExistingScheduleToAdminForm;
+    }
+
+    function loadStaffExistingScheduleToAdminForm() {
+        const staffSelect = document.getElementById("shift-staff-select");
+        if (!staffSelect || !staffSelect.value) return;
+        const staffName = staffSelect.value;
+        const staffSchedule = window.globalSchedulesCache[staffName];
+
+        DAYS_OF_WEEK.forEach((day, index) => {
+            let inInput = document.getElementById(`in-time-${index}`);
+            let outInput = document.getElementById(`out-time-${index}`);
+            let offCheck = document.getElementById(`off-day-${index}`);
+
+            if (staffSchedule && staffSchedule[day]) {
+                inInput.value = staffSchedule[day].in || "09:00";
+                outInput.value = staffSchedule[day].out || "18:00";
+                offCheck.checked = !!staffSchedule[day].isOff;
+            } else {
+                inInput.value = "09:00";
+                outInput.value = "18:00";
+                offCheck.checked = false;
+            }
+        });
+    }
+
+    async function saveStaffWeeklySchedule() {
+        const staffSelect = document.getElementById("shift-staff-select");
+        if (!staffSelect || !staffSelect.value) {
+            alert("Lütfen bir personel seçin.");
+            return;
+        }
+        const staffName = staffSelect.value;
+        let scheduleData = {};
+
+        DAYS_OF_WEEK.forEach((day, index) => {
+            scheduleData[day] = {
+                in: document.getElementById(`in-time-${index}`).value,
+                out: document.getElementById(`out-time-${index}`).value,
+                isOff: document.getElementById(`off-day-${index}`).checked
+            };
+        });
+
+        // Supabase upsert
+        const { error } = await supabaseClient
+            .from('schedules')
+            .upsert([{ staff_name: staffName, schedule_data: scheduleData }], { onConflict: 'staff_name' });
+
+        if (error) {
+            alert("Vardiya kaydedilemedi: " + error.message);
+        } else {
+            alert(`${staffName} personelinin haftalık vardiya programı başarıyla kaydedildi!`);
+            await fetchSchedules();
+        }
+    }
+
+    function renderUserShiftView() {
+        const tbody = document.getElementById("user-shift-view-table");
+        if (!tbody || !currentUser) return;
+
+        let staffSchedule = window.globalSchedulesCache[currentUser];
+        if (!staffSchedule) {
+            tbody.innerHTML = '<tr><td colspan="3">Merkez henüz program tanımlamadı.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = "";
+        DAYS_OF_WEEK.forEach(day => {
+            let dayInfo = staffSchedule[day];
+            let tr = document.createElement("tr");
+            if (dayInfo && dayInfo.isOff) {
+                tr.innerHTML = `<td style="font-weight:700;">${day}</td><td colspan="2" style="color: #e74c3c; font-weight:700;">🏖️ İzinli Gün</td>`;
+            } else if (dayInfo) {
+                tr.innerHTML = `<td>${day}</td><td>${dayInfo.in} - ${dayInfo.out}</td><td style="color: #27ae60; font-weight:600;">Çalışma Günü</td>`;
+            } else {
+                tr.innerHTML = `<td>${day}</td><td colspan="2">Belirlenmedi</td>`;
+            }
+            tbody.appendChild(tr);
+        });
     }
 
     function updateStaffFilterOptions() {
         const staffFilterSelect = document.getElementById("staff-filter");
         if (!staffFilterSelect) return;
-        
-        const currentValue = staffFilterSelect.value;
-        let logs = window.globalLogsCache || [];
-        
+        let currentValue = staffFilterSelect.value;
         let staffSet = new Set();
-        logs.forEach(l => { if(l.user) staffSet.add(l.user); });
+        (window.globalLogsCache || []).forEach(l => { if(l.user) staffSet.add(l.user); });
 
         staffFilterSelect.innerHTML = '<option value="Tümü">Tüm Personeller</option>';
         staffSet.forEach(staffName => {
@@ -570,22 +702,15 @@
             opt.innerText = staffName;
             staffFilterSelect.appendChild(opt);
         });
-
-        if (currentValue && Array.from(staffFilterSelect.options).some(o => o.value === currentValue)) {
-            staffFilterSelect.value = currentValue;
-        }
+        if (currentValue) staffFilterSelect.value = currentValue;
     }
 
     function updateAdminDossierOptions() {
         const dossierSelect = document.getElementById("admin-dossier-select");
         if (!dossierSelect) return;
-
-        const currentValue = dossierSelect.value;
+        let currentValue = dossierSelect.value;
         let staffSet = new Set();
-        
-        Object.keys(database).forEach(b => {
-            database[b].staff.forEach(s => staffSet.add(s.name));
-        });
+        Object.keys(database).forEach(b => database[b].staff.forEach(s => staffSet.add(s.name)));
         (window.globalLogsCache || []).forEach(l => { if(l.user) staffSet.add(l.user); });
 
         dossierSelect.innerHTML = '<option value="">Rapor için personel seçiniz...</option>';
@@ -595,10 +720,7 @@
             opt.innerText = staffName;
             dossierSelect.appendChild(opt);
         });
-
-        if (currentValue && Array.from(dossierSelect.options).some(o => o.value === currentValue)) {
-            dossierSelect.value = currentValue;
-        }
+        if (currentValue) dossierSelect.value = currentValue;
     }
 
     function renderAdminStaffDossier() {
@@ -614,146 +736,71 @@
 
         const selectedStaff = select.value;
         resultArea.classList.remove("hidden");
-
         let logs = (window.globalLogsCache || []).filter(l => l.user === selectedStaff);
         
         let workDays = new Set();
         let izinCount = 0;
-        let totalEntries = logs.length;
-
         logs.forEach(l => {
-            if(l.created_at) {
-                workDays.add(l.created_at.split('T')[0]);
-            }
-            if(l.action && l.action.toLowerCase().includes('izin')) {
-                izinCount++;
-            }
+            if(l.created_at) workDays.add(l.created_at.split('T')[0]);
+            if(l.action && l.action.toLowerCase().includes('izin')) izinCount++;
         });
 
-        let totalMinutes = totalEntries * 240;
-        let hours = Math.floor(totalMinutes / 60);
-        let mins = totalMinutes % 60;
-
-        summaryText.innerHTML = `👤 <b>${selectedStaff}</b> Personel Dosyası:<br>` +
-            `📅 Aktif Çalışılan Gün: ${workDays.size} Gün | 🏖️ İzin/Rapor: ${izinCount} Adet<br>` +
-            `⏱️ Toplam Çalışma: ${hours} Saat ${mins} Dk (${totalEntries} Hareket)`;
+        let totalMinutes = logs.length * 240;
+        summaryText.innerHTML = `👤 <b>${selectedStaff}</b> | Gün: ${workDays.size} | İzin: ${izinCount} | Toplam: ${Math.floor(totalMinutes/60)}s ${totalMinutes%60}dk`;
 
         if (logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3">Bu personele ait kayıt bulunmuyor.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="3">Kayıt yok</td></tr>';
             return;
         }
 
         tbody.innerHTML = "";
         logs.forEach(log => {
             let tr = document.createElement("tr");
-            let dateFormatted = log.created_at ? log.created_at.replace('T', ' ').substring(0, 16) : log.time;
-            tr.innerHTML = `
-                <td>${log.branch || 'Merkez'}</td>
-                <td>${log.action}</td>
-                <td>${dateFormatted}</td>
-            `;
+            tr.innerHTML = `<td>${log.branch || 'Merkez'}</td><td>${log.action}</td><td>${log.created_at ? log.created_at.replace('T', ' ').substring(0, 16) : log.time}</td>`;
             tbody.appendChild(tr);
         });
     }
 
-    function saveBranchShiftSettings() {
-        const branch = document.getElementById("target-branch-shift").value;
-        const targetHours = document.getElementById("target-hours-input").value;
-        if (!targetHours) {
-            alert("Lütfen bir hedef çalışma süresi girin.");
-            return;
-        }
-        alert(`${branch} şubesi için haftalık hedef çalışma süresi "${targetHours}" olarak başarıyla kaydedildi!`);
-        document.getElementById("target-hours-input").value = "";
-    }
-
     async function sendBroadcastMessage() {
         const msgText = document.getElementById("admin-msg-input").value;
-        if (!msgText) {
-            alert("Lütfen bir duyuru mesajı yazın.");
-            return;
-        }
-
-        const { error } = await supabaseClient
-            .from('messages')
-            .insert([{ text: msgText }]);
-
-        if (error) {
-            alert("Gönderilemedi: " + error.message);
-        } else {
+        if (!msgText) { alert("Duyuru metni yazın."); return; }
+        const { error } = await supabaseClient.from('messages').insert([{ text: msgText }]);
+        if (!error) {
             document.getElementById("admin-msg-input").value = "";
-            alert("Bildirim tüm telefonlara başarıyla iletildi!");
+            alert("Bildirim yayınlandı!");
             fetchAllData();
         }
     }
 
     async function deleteMessage(id) {
-        const { error } = await supabaseClient
-            .from('messages')
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            alert("Silinemedi: " + error.message);
-        } else {
-            fetchAllData();
-        }
+        await supabaseClient.from('messages').delete().eq('id', id);
+        fetchAllData();
     }
 
     async function deleteLog(id) {
-        // Döngüsel onay pencereleri hatasını önlemek için doğrudan asenkron silme işlemine geçildi
-        const { error } = await supabaseClient
-            .from('logs')
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            alert("Kayıt silinemedi: " + error.message);
-        } else {
-            await fetchAllData();
-        }
+        await supabaseClient.from('logs').delete().eq('id', id);
+        fetchAllData();
     }
 
     async function editLog(id) {
         let logItem = (window.globalLogsCache || []).find(l => String(l.id) === String(id));
-        let currentActionVal = logItem ? logItem.action : "";
-        let currentTimeVal = logItem ? logItem.time : "";
-
-        let newAction = prompt("İşlem adını düzenleyin:", currentActionVal);
+        let newAction = prompt("İşlemi düzenle:", logItem ? logItem.action : "");
         if (newAction === null) return;
-
-        let newTime = prompt("Saati düzenleyin (Örn: 08:30:00):", currentTimeVal);
+        let newTime = prompt("Saati düzenle:", logItem ? logItem.time : "");
         if (newTime === null) return;
 
-        const { error } = await supabaseClient
-            .from('logs')
-            .update({ action: newAction, time: newTime })
-            .eq('id', id);
-
-        if (error) {
-            alert("Güncellenemedi: " + error.message);
-        } else {
-            await fetchAllData();
-        }
+        await supabaseClient.from('logs').update({ action: newAction, time: newTime }).eq('id', id);
+        fetchAllData();
     }
 
     function exportToExcel() {
         let logs = window.globalLogsCache || [];
-        if (logs.length === 0) {
-            alert("Dışa aktarılacak veri bulunmuyor.");
-            return;
-        }
-        let dataToExport = logs.map(l => ({
-            "Şube": l.branch,
-            "Personel": l.user,
-            "İşlem": l.action,
-            "Saat": l.time,
-            "Tarih/Kayıt": l.created_at || ""
-        }));
+        if (logs.length === 0) { alert("Veri yok"); return; }
+        let dataToExport = logs.map(l => ({ "Şube": l.branch, "Personel": l.user, "İşlem": l.action, "Saat": l.time, "Tarih": l.created_at || "" }));
         let worksheet = XLSX.utils.json_to_sheet(dataToExport);
         let workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "SweetWaffle_Raporlar");
-        XLSX.writeFile(workbook, "SweetWaffle_Personel_Raporu.xlsx");
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Raporlar");
+        XLSX.writeFile(workbook, "SweetWaffle_Rapor.xlsx");
     }
 
     function exportToPDF() {
@@ -761,20 +808,17 @@
         let doc = new jsPDF();
         doc.setFont("helvetica", "bold");
         doc.setFontSize(16);
-        doc.text("Sweet Waffle - Merkez Yonetim Raporu", 14, 20);
-        
+        doc.text("Sweet Waffle - Rapor", 14, 20);
         doc.setFontSize(11);
         doc.setFont("helvetica", "normal");
         let logs = window.globalLogsCache || [];
         let y = 30;
-        
         logs.slice(0, 20).forEach((l, idx) => {
-            let line = `${idx+1}. Şube: ${l.branch} | Personel: ${l.user} | İşlem: ${l.action} | Saat: ${l.time}`;
-            doc.text(line, 14, y);
+            doc.text(`${idx+1}. Şube: ${l.branch} | Personel: ${l.user} | İşlem: ${l.action}`, 14, y);
             y += 8;
             if(y > 280) { doc.addPage(); y = 20; }
         });
-        doc.save("SweetWaffle_Personel_Raporu.pdf");
+        doc.save("SweetWaffle_Rapor.pdf");
     }
 
     function selectLocation(branchKey) {
@@ -795,13 +839,13 @@
     }
 
     function verifyAdminLogin() {
-        const enteredPass = document.getElementById("admin-password").value;
-        if (enteredPass === ADMIN_PASS) {
+        if (document.getElementById("admin-password").value === ADMIN_PASS) {
             document.getElementById("admin-login-screen").classList.add("hidden");
             document.getElementById("admin-screen").classList.remove("hidden");
             fetchAllData();
+            buildAdminShiftTableTemplate();
         } else {
-            alert("Hatalı Yönetici Şifresi!");
+            alert("Hatalı Şifre!");
         }
     }
 
@@ -834,23 +878,17 @@
     function login() {
         const staff = document.getElementById("staff-select").value;
         const pass = document.getElementById("staff-password").value;
+        if (!staff || !pass) { alert("Personel ve şifre girin."); return; }
 
-        if (!staff || !pass) {
-            alert("Lütfen personel seçin ve şifrenizi girin.");
-            return;
-        }
-
-        const empList = database[currentBranch].staff;
-        const emp = empList.find(e => e.name === staff && e.pass === pass);
-
+        let emp = database[currentBranch].staff.find(e => e.name === staff && e.pass === pass);
         if (emp) {
             currentUser = emp.name;
             document.getElementById("login-screen").classList.add("hidden");
             document.getElementById("panel-screen").classList.remove("hidden");
             document.getElementById("welcome-title").innerText = "Sayın " + currentUser;
             document.getElementById("user-branch-info").innerText = "Şube: " + currentBranch;
-            
             fetchAllData();
+            renderUserShiftView();
             updateUserPanelUI();
         } else {
             alert("Hatalı şifre!");
@@ -862,38 +900,24 @@
         currentBranch = null;
         document.getElementById("staff-password").value = "";
         if (countdownInterval) clearInterval(countdownInterval);
-        document.getElementById("dynamic-alert-container").innerHTML = "";
         document.getElementById("panel-screen").classList.add("hidden");
         document.getElementById("main-selection-screen").classList.remove("hidden");
     }
 
     function renderUserMessages(messages) {
         const container = document.getElementById("center-msg-wrapper");
-        if (!messages || messages.length === 0) {
-            container.innerHTML = "";
-            return;
-        }
-
+        if (!messages || messages.length === 0) { container.innerHTML = ""; return; }
         container.innerHTML = "";
-        messages.forEach((msgObj) => {
+        messages.forEach(msgObj => {
             let box = document.createElement("div");
             box.className = "msg-box";
-            box.innerHTML = `
-                <div style="display: flex; align-items: flex-start; gap: 8px;">
-                    <span style="font-size: 16px;">📢</span>
-                    <div style="flex: 1;">
-                        <strong>Merkezden Bildirim:</strong>
-                        <p style="margin: 4px 0 0 0;">${msgObj.text}</p>
-                    </div>
-                </div>
-            `;
+            box.innerHTML = `📢 <strong>Merkezden Bildirim:</strong><p style="margin:4px 0 0 0;">${msgObj.text}</p>`;
             container.appendChild(box);
         });
     }
 
     function updateUserPanelUI() {
         if (!currentUser || !window.globalLogsCache) return;
-        
         let userLogs = window.globalLogsCache.filter(l => l.user === currentUser);
         const list = document.getElementById("today-logs");
         if (userLogs.length === 0) {
@@ -909,61 +933,31 @@
     }
 
     function openQrScannerWithGpsCheck() {
-        if (!navigator.geolocation) {
-            alert("Tarayıcınız konum (GPS) desteklemiyor.");
-            return;
-        }
-
+        if (!navigator.geolocation) { alert("GPS desteklenmiyor."); return; }
         alert("Konum kontrol ediliyor...");
-
-        navigator.geolocation.getCurrentPosition(
-            position => {
-                let userLat = position.coords.latitude;
-                let userLng = position.coords.longitude;
-                let branchData = database[currentBranch];
-
-                let distance = calculateDistance(userLat, userLng, branchData.lat, branchData.lng);
-
-                if (distance > 500) {
-                    alert(`Güvenlik Uyarısı: Şube konumunda değilsiniz! Uzaklık: ${Math.round(distance)}m.`);
-                    return;
-                }
-
-                startCameraScanner();
-            },
-            error => { alert("Konum alınamadı."); },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
+        navigator.geolocation.getCurrentPosition(position => {
+            let dist = calculateDistance(position.coords.latitude, position.coords.longitude, database[currentBranch].lat, database[currentBranch].lng);
+            if (dist > 500) { alert(`Şube konumunda değilsiniz! Uzaklık: ${Math.round(dist)}m.`); return; }
+            startCameraScanner();
+        }, () => alert("Konum alınamadı."), { enableHighAccuracy: true });
     }
 
     function startCameraScanner() {
         document.getElementById("panel-screen").classList.add("hidden");
         document.getElementById("qr-scanner-screen").classList.remove("hidden");
-
         html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            qrCodeMessage => {
-                closeQrScanner();
-                triggerAction('GPS + QR Onaylı İşe Giriş', 0);
-            },
-            errorMessage => {}
-        ).catch(err => {
-            alert("Kamera başlatılamadı: " + err);
+        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, () => {
             closeQrScanner();
-        });
+            triggerAction('GPS + QR Onaylı İşe Giriş', 0);
+        }, () => {});
     }
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
         let R = 6371e3;
         let dLat = (lat2 - lat1) * Math.PI / 180;
         let dLon = (lon2 - lon1) * Math.PI / 180;
-        let a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
+        let a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
     }
 
     function closeQrScanner() {
@@ -975,63 +969,24 @@
                 document.getElementById("qr-scanner-screen").classList.add("hidden");
                 document.getElementById("panel-screen").classList.remove("hidden");
             });
-        } else {
-            document.getElementById("qr-scanner-screen").classList.add("hidden");
-            document.getElementById("panel-screen").classList.remove("hidden");
         }
     }
 
     async function triggerAction(actionName, durationMins) {
         let timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        
-        const { error } = await supabaseClient
-            .from('logs')
-            .insert([{ branch: currentBranch, user: currentUser, action: actionName, time: timeStr }]);
-
-        if (error) {
-            alert("Kayıt eklenemedi: " + error.message);
-            return;
-        }
-
+        const { error } = await supabaseClient.from('logs').insert([{ branch: currentBranch, user: currentUser, action: actionName, time: timeStr }]);
+        if (error) { alert("Hata: " + error.message); return; }
         await fetchAllData();
-
-        if (durationMins > 0) {
-            if (countdownInterval) clearInterval(countdownInterval);
-            let targetTime = new Date().getTime() + (durationMins * 60 * 1000);
-
-            countdownInterval = setInterval(() => {
-                let now = new Date().getTime();
-                let distance = targetTime - now;
-
-                if (distance < 0) {
-                    clearInterval(countdownInterval);
-                    document.getElementById("dynamic-alert-container").innerHTML = `<div class="alert-box">🚨 Mola Süreniz Bitti!</div>`;
-                } else {
-                    let mins = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                    let secs = Math.floor((distance % (1000 * 60)) / 1000);
-                    document.getElementById("dynamic-alert-container").innerHTML = `<div class="timer-box">⏳ Kalan Mola: ${mins} dk ${secs} sn</div>`;
-                }
-            }, 1000);
-        } else {
-            if (countdownInterval) clearInterval(countdownInterval);
-            document.getElementById("dynamic-alert-container").innerHTML = `<div style="background: #eafaf1; color: #27ae60; padding: 12px; border-radius: 14px; margin-bottom: 14px; text-align: center; font-weight: 700; font-size: 13px;">✅ ${actionName} kaydedildi.</div>`;
-        }
     }
 
     function updateAdminMessagesList(messages) {
         const container = document.getElementById("admin-messages-list");
-        if (!messages || messages.length === 0) {
-            container.innerHTML = '<p style="font-size: 12px; color: #777;">Aktif duyuru yok.</p>';
-            return;
-        }
+        if (!messages || messages.length === 0) { container.innerHTML = '<p style="font-size:12px; color:#777;">Aktif duyuru yok.</p>'; return; }
         container.innerHTML = "";
-        messages.forEach((msgObj) => {
+        messages.forEach(msgObj => {
             let div = document.createElement("div");
-            div.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 6px 10px; margin-bottom: 6px; border-radius: 8px; border: 1px solid var(--border-warm); font-size: 12px;";
-            div.innerHTML = `
-                <span style="flex-grow: 1; margin-right: 10px;">${msgObj.text}</span>
-                <button class="btn btn-danger" style="width: auto; padding: 3px 6px; margin: 0; font-size: 10px;" onclick="deleteMessage('${msgObj.id}')">Sil</button>
-            `;
+            div.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 5px 8px; margin-bottom: 4px; border-radius: 6px; border: 1px solid var(--border-warm); font-size: 11px;";
+            div.innerHTML = `<span style="flex-grow:1; margin-right:8px;">${msgObj.text}</span><button class="btn btn-danger" style="width:auto; padding:2px 5px; margin:0; font-size:9px;" onclick="deleteMessage('${msgObj.id}')">Sil</button>`;
             container.appendChild(div);
         });
     }
@@ -1039,34 +994,17 @@
     function updateAdminTable() {
         const tbody = document.getElementById("admin-log-table");
         let logs = window.globalLogsCache || [];
+        const branchFilter = document.getElementById("branch-filter").value;
+        const staffFilter = document.getElementById("staff-filter").value;
         
-        const branchFilter = document.getElementById("branch-filter") ? document.getElementById("branch-filter").value : "Tümü";
-        const staffFilter = document.getElementById("staff-filter") ? document.getElementById("staff-filter").value : "Tümü";
-        
-        if (branchFilter !== "Tümü") {
-            logs = logs.filter(l => l.branch === branchFilter);
-        }
-        if (staffFilter !== "Tümü") {
-            logs = logs.filter(l => l.user === staffFilter);
-        }
+        if (branchFilter !== "Tümü") logs = logs.filter(l => l.branch === branchFilter);
+        if (staffFilter !== "Tümü") logs = logs.filter(l => l.user === staffFilter);
 
-        if (logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5">Kayıt bulunmuyor.</td></tr>';
-            return;
-        }
+        if (logs.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Kayıt yok.</td></tr>'; return; }
         tbody.innerHTML = "";
         logs.forEach(log => {
             let tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td>${log.branch}</td>
-                <td>${log.user}</td>
-                <td>${log.action}</td>
-                <td>${log.time}</td>
-                <td>
-                    <button class="btn btn-warning" style="width: auto; padding: 3px 6px; margin: 2px; font-size: 10px; display: inline-block;" onclick="editLog('${log.id}')">Düzenle</button>
-                    <button class="btn btn-danger" style="width: auto; padding: 3px 6px; margin: 2px; font-size: 10px; display: inline-block;" onclick="deleteLog('${log.id}')">Sil</button>
-                </td>
-            `;
+            tr.innerHTML = `<td>${log.branch}</td><td>${log.user}</td><td>${log.action}</td><td>${log.time}</td><td><button class="btn btn-warning" style="width:auto; padding:2px 4px; margin:1px; font-size:9px; display:inline-block;" onclick="editLog('${log.id}')">Düzenle</button><button class="btn btn-danger" style="width:auto; padding:2px 4px; margin:1px; font-size:9px; display:inline-block;" onclick="deleteLog('${log.id}')">Sil</button></td>`;
             tbody.appendChild(tr);
         });
     }
