@@ -84,7 +84,7 @@
     </div>
     <h2>Sweet Waffle</h2>
 
-    <!-- 1. LOKASYON SEÇİMİ -->
+    <!-- 1. LOKASYON SEÇİMİ (Koordinatlar Temizlendi) -->
     <div id="main-selection-screen">
         <h3>Lokasyon Seçiniz</h3>
         <button class="btn btn-branch" onclick="selectLocation('MerkezYonetim')">🏢 Merkez (Yönetim & Takip)</button>
@@ -188,8 +188,17 @@
             </div>
         </div>
 
+        <!-- Şube Filtrelemeli Hareketler Paneli -->
         <div class="card">
-            <strong>Şube Personel Hareketleri & Düzenleme:</strong>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="font-size: 13px;">Şube Personel Hareketleri:</strong>
+                <select id="branch-filter" onchange="updateAdminTable()" style="width: 130px; margin: 0; padding: 5px; font-size: 12px;">
+                    <option value="Tümü">Tüm Şubeler</option>
+                    <option value="Kurtköy">Kurtköy</option>
+                    <option value="Soğanlık">Soğanlık</option>
+                    <option value="Yeni">Yeni Şube</option>
+                </select>
+            </div>
             <div style="max-height: 160px; overflow-y: auto;">
                 <table>
                     <thead>
@@ -215,7 +224,7 @@
 </div>
 
 <script>
-   // SUPABASE BAĞLANTI BİLGİLERİNİZ
+    // SUPABASE BAĞLANTI BİLGİLERİNİZ (.supabase.co uzantısı düzeltildi)
     const SUPABASE_URL = 'https://yatgnoiybbjvmreikeqs.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_8BxYi7oOUnHvkHAJQNaitQ_kKlHk_Y_';
 
@@ -643,9 +652,19 @@
         });
     }
 
+    // Şube Filtreleme Destekli Tablo Güncelleme Fonksiyonu
     function updateAdminTable() {
         const tbody = document.getElementById("admin-log-table");
         let logs = window.globalLogsCache || [];
+        
+        // Seçilen şube filtresini al
+        const filterSelect = document.getElementById("branch-filter");
+        const selectedFilter = filterSelect ? filterSelect.value : "Tümü";
+        
+        if (selectedFilter !== "Tümü") {
+            logs = logs.filter(l => l.branch === selectedFilter);
+        }
+
         if (logs.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5">Henüz hareket yok.</td></tr>';
             return;
