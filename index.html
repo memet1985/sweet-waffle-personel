@@ -7,9 +7,9 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#5c3a21">
     
-    <!-- Telefonda Ana Ekrana Eklendiğinde Görünecek Dinamik PWA İkonu (SWP Harfleri & Orijinal Renkler) -->
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='110' fill='%235c3a21'/><circle cx='256' cy='256' r='200' fill='%23f3d08a'/><circle cx='256' cy='256' r='175' fill='%23fff6e9'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-family='Segoe UI, Arial, sans-serif' font-weight='900' font-size='150' fill='%235c3a21'>SWP</text></svg>">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='110' fill='%235c3a21'/><circle cx='256' cy='256' r='200' fill='%23f3d08a'/><circle cx='256' cy='256' r='175' fill='%23fff6e9'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-family='Segoe UI, Arial, sans-serif' font-weight='900' font-size='150' fill='%235c3a21'>SWP</text></svg>">
+    <!-- Telefonda Ana Ekrana Eklendiğinde Görünecek PWA İkonu (logo.webp Dosyasına Bağlandı) -->
+    <link rel="apple-touch-icon" href="logo.webp">
+    <link rel="icon" href="logo.webp">
 
     <!-- QR Kütüphanesi (Html5-Qrcode) -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -300,8 +300,10 @@
 
         if (emp) {
             currentUser = emp.name;
+            userProfiles = JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || {};
             if (!userProfiles[currentUser]) {
                 userProfiles[currentUser] = { totalMinutes: 1200, logs: [], lastInTime: null };
+                saveData();
             }
 
             document.getElementById("login-screen").classList.add("hidden");
@@ -317,11 +319,14 @@
     }
 
     function logout() {
-        if (currentUser && userProfiles[currentUser].lastInTime) {
-            let workedMins = Math.floor((new Date().getTime() - userProfiles[currentUser].lastInTime) / 60000);
-            userProfiles[currentUser].totalMinutes += workedMins;
-            userProfiles[currentUser].lastInTime = null;
-            saveData();
+        if (currentUser) {
+            userProfiles = JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || userProfiles;
+            if (userProfiles[currentUser] && userProfiles[currentUser].lastInTime) {
+                let workedMins = Math.floor((new Date().getTime() - userProfiles[currentUser].lastInTime) / 60000);
+                userProfiles[currentUser].totalMinutes += workedMins;
+                userProfiles[currentUser].lastInTime = null;
+                saveData();
+            }
         }
 
         currentUser = null;
@@ -481,8 +486,8 @@
         let timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         
         // Güncel verileri storage'dan çek
-        userProfiles = JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || userProfiles;
-        globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || globalLogs;
+        userProfiles = JSON.parse(localStorage.getItem('sweet_waffle_user_profiles')) || {};
+        globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || [];
 
         if (!userProfiles[currentUser]) {
             userProfiles[currentUser] = { totalMinutes: 1200, logs: [], lastInTime: null };
@@ -590,7 +595,7 @@
     }
 
     function editLog(logId) {
-        globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || globalLogs;
+        globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || [];
         let logItem = globalLogs.find(l => l.id === logId);
         if (!logItem) return;
 
@@ -608,7 +613,7 @@
 
     function deleteLog(logId) {
         if (confirm("Bu hareket kaydını silmek istediğinize emin misiniz?")) {
-            globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || globalLogs;
+            globalLogs = JSON.parse(localStorage.getItem('sweet_waffle_global_logs')) || [];
             globalLogs = globalLogs.filter(l => l.id !== logId);
             saveData();
             updateAdminTable();
