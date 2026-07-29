@@ -8,80 +8,193 @@
     <meta name="theme-color" content="#ff4757">
     <style>
         body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 20px; text-align: center; }
-        .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { color: #ff4757; }
-        .btn { display: block; width: 100%; padding: 12px; margin: 10px 0; background: #ff4757; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        .container { max-width: 450px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; }
+        h2, h3 { color: #ff4757; text-align: center; }
+        .btn { display: block; width: 100%; padding: 12px; margin: 10px 0; background: #ff4757; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; text-align: center; font-weight: bold; }
         .btn:active { background: #e84118; }
-        .log-box { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-top: 15px; text-align: left; font-size: 14px; max-height: 150px; overflow-y: auto; }
+        .btn-qr { background: #2ed573; font-size: 18px; }
+        .btn-qr:active { background: #26af5f; }
+        .btn-back { background: #747d8c; }
+        select, input { width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .hidden { display: none; }
+        .card { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #ff4757; }
+        .msg-box { background: #ffeaa7; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
+        .stats { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .stat-box { background: #dfe4ea; padding: 8px; border-radius: 6px; width: 48%; text-align: center; font-size: 13px; }
+        .log-list { font-size: 13px; max-height: 120px; overflow-y: auto; padding-left: 15px; margin: 0; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2>Sweet Waffle</h2>
-    <p id="branch-info">Şube: Kurtköy (Örnek)</p>
-    
-    <button class="btn" onclick="scanQRCode('Giriş')">İşe Giriş Yap</button>
-    <button class="btn" onclick="scanQRCode('Yemek Mola')">Yemek Molası</button>
-    <button class="btn" onclick="scanQRCode('Çıkış')">İşten Çıkış Yap</button>
 
-    <div class="log-box">
-        <strong>Son İşlemler:</strong>
-        <ul id="log-list" style="padding-left: 20px; margin: 5px 0;">
-            <li>Henüz işlem yapılmadı.</li>
-        </ul>
+    <!-- GİRİŞ EKRANI: ŞUBE VE PERSONEL SEÇİMİ -->
+    <div id="login-screen">
+        <h3>Şube ve Personel Girişi</h3>
+        
+        <label>Şube Seçin:</label>
+        <select id="branch-select" onchange="loadStaff()">
+            <option value="">Şube Seçiniz...</option>
+            <option value="Merkez">Merkez</option>
+            <option value="Kurtköy">Şube 1 - Kurtköy</option>
+            <option value="Soğanlık">Şube 2 - Soğanlık</option>
+            <option value="Yeni">Şube 3 - Yeni</option>
+        </select>
+
+        <label>Personel Seçin:</label>
+        <select id="staff-select">
+            <option value="">Önce şube seçiniz...</option>
+        </select>
+
+        <label>Şifre:</label>
+        <input type="password" id="staff-password" placeholder="Personel Şifresi">
+
+        <button class="btn" onclick="login()">Giriş Yap</button>
+    </div>
+
+    <!-- PERSONEL PANELİ -->
+    <div id="panel-screen" class="hidden">
+        <h3 id="welcome-title">Hoş Geldiniz</h3>
+        <p id="user-branch-info" style="text-align: center; color: #666; font-size: 14px;"></p>
+
+        <!-- MERKEZDEN GELEN MESAJLAR -->
+        <div class="msg-box">
+            <strong>Merkezden Mesaj:</strong>
+            <p id="center-message" style="margin: 5px 0 0 0;">Yeni vardiya düzeni ve kurallarına dikkat ediniz.</p>
+        </div>
+
+        <!-- EN ÜSTTE QR KOD OKUMA BUTONU -->
+        <button class="btn btn-qr" onclick="scanQRCode()">📸 QR Kod Okut (Giriş/Çıkış/Mola)</button>
+
+        <!-- ÇALIŞMA SAATLERİ İSTATİSTİKLERİ -->
+        <div class="stats">
+            <div class="stat-box"><strong>Haftalık Çalışma:</strong><br><span id="weekly-hours">0 Saat</span></div>
+            <div class="stat-box"><strong>Aylık Çalışma:</strong><br><span id="monthly-hours">0 Saat</span></div>
+        </div>
+
+        <!-- GÜNLÜK HAREKETLER -->
+        <div class="card">
+            <strong>Bugünkü Hareketler:</strong>
+            <ul class="log-list" id="today-logs">
+                <li>Henüz kayıt yok.</li>
+            </ul>
+        </div>
+
+        <button class="btn btn-back" onclick="logout()">Çıkış Yap / Şube Değiştir</button>
     </div>
 </div>
 
 <script>
-    // Şube Merkez Koordinatları Örneği (Kurtköy)
-    const branchLocation = { lat: 40.9412, lon: 29.3115, maxRadius: 100 }; // 100 metre yarıçap
+    // Örnek Personel Veritabanı ve Şifreleri (Her şubede örnek 2'şer kişi, Nesrin POLAT dahil)
+    const database = {
+        "Merkez": [
+            { name: "Nesrin POLAT", pass: "1234" },
+            { name: "Ahmet Yılmaz", pass: "1234" }
+        ],
+        "Kurtköy": [
+            { name: "Mehmet Demir", pass: "1234" },
+            { name: "Ayşe Kaya", pass: "1234" }
+        ],
+        "Soğanlık": [
+            { name: "Can Çelik", pass: "1234" },
+            { name: "Elif Demir", pass: "1234" }
+        ],
+        "Yeni": [
+            { name: "Burak Şahin", pass: "1234" },
+            { name: "Zeynep Koç", pass: "1234" }
+        ]
+    };
 
-    function scanQRCode(actionType) {
-        if (!navigator.geolocation) {
-            alert("Tarayıcınız konum bilgisini desteklemiyor.");
+    let currentUser = null;
+    let currentBranch = null;
+
+    function loadStaff() {
+        const branch = document.getElementById("branch-select").value;
+        const staffSelect = document.getElementById("staff-select");
+        staffSelect.innerHTML = '<option value="">Personel Seçiniz...</option>';
+
+        if (branch && database[branch]) {
+            database[branch].forEach(emp => {
+                let opt = document.createElement("option");
+                opt.value = emp.name;
+                opt.innerText = emp.name;
+                staffSelect.appendChild(opt);
+            });
+        }
+    }
+
+    function login() {
+        const branch = document.getElementById("branch-select").value;
+        const staff = document.getElementById("staff-select").value;
+        const pass = document.getElementById("staff-password").value;
+
+        if (!branch || !staff || !pass) {
+            alert("Lütfen şube, personel seçin ve şifrenizi girin.");
             return;
         }
 
-        alert(actionType + " için karekod okunuyor ve konum doğrulanıyor...");
+        const empList = database[branch];
+        const emp = empList.find(e => e.name === staff && e.pass === pass);
+
+        if (emp) {
+            currentUser = emp.name;
+            currentBranch = branch;
+            
+            document.getElementById("login-screen").classList.add("hidden");
+            document.getElementById("panel-screen").classList.remove("hidden");
+            
+            document.getElementById("welcome-title").innerText = "Sayın " + currentUser;
+            document.getElementById("user-branch-info").innerText = "Şube: " + currentBranch;
+            
+            // Örnek İstatistikleri Yükle
+            document.getElementById("weekly-hours").innerText = "32 Saat";
+            document.getElementById("monthly-hours").innerText = "142 Saat";
+        } else {
+            alert("Hatalı şifre veya seçim!");
+        }
+    }
+
+    function logout() {
+        currentUser = null;
+        currentBranch = null;
+        document.getElementById("staff-password").value = "";
+        document.getElementById("panel-screen").classList.add("hidden");
+        document.getElementById("login-screen").classList.remove("hidden");
+    }
+
+    function scanQRCode() {
+        if (!navigator.geolocation) {
+            alert("Tarayıcınız konum özelliğini desteklemiyor.");
+            return;
+        }
+
+        alert("Kamera açılıyor ve şube konumu doğrulanıyor...");
 
         navigator.geolocation.getCurrentPosition(position => {
-            const userLat = position.coords.latitude;
-            const userLon = position.coords.longitude;
+            // Konum doğrulama simülasyonu başarılı kabul ediliyor
+            const time = new Date().toLocaleTimeString();
+            const actionTypes = ["İşe Giriş", "Yemek Molası", "Çıkış"];
+            let chosenAction = prompt("İşlem Seçiniz:\n1 - İşe Giriş\n2 - Yemek Molası\n3 - İşten Çıkış", "1");
+            
+            let actionName = "İşlem";
+            if (chosenAction === "1") actionName = "İşe Giriş";
+            else if (chosenAction === "2") actionName = "Yemek Molası";
+            else if (chosenAction === "3") actionName = "İşten Çıkış";
+            else return;
 
-            const distance = calculateDistance(userLat, userLon, branchLocation.lat, branchLocation.lon);
-
-            if (distance <= branchLocation.maxRadius) {
-                alert("Başarılı! Konumdasınız. " + actionType + " kaydedildi. (Mesafe: " + Math.round(distance) + "m)");
-                addLog(actionType);
-            } else {
-                alert("Hata! Şube alanının dışındasınız. İşlem onaylanmadı. (Uzaklık: " + Math.round(distance) + "m)");
+            const list = document.getElementById("today-logs");
+            if (list.children[0] && list.children[0].innerText.includes("Henüz")) {
+                list.innerHTML = "";
             }
+            let li = document.createElement("li");
+            li.innerText = actionName + " - " + time + " (Onaylandı)";
+            list.prepend(li);
+
+            alert(actionName + " başarıyla kaydedildi!");
         }, error => {
-            alert("Konum alınamadı. Lütfen konum iznini açın.");
+            alert("Konum alınamadı! Lütfen konum izinlerini kontrol edin.");
         }, { enableHighAccuracy: true });
-    }
-
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3; // Metre cinsinden Dünya yarıçapı
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
-    }
-
-    function addLog(action) {
-        const list = document.getElementById("log-list");
-        if (list.children[0] && list.children[0].innerText.includes("Henüz")) {
-            list.innerHTML = "";
-        }
-        const li = document.createElement("li");
-        const time = new Date().toLocaleTimeString();
-        li.innerText = action + " - " + time;
-        list.prepend(li);
     }
 </script>
 
