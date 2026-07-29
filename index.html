@@ -1,1 +1,1088 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sweet Waffle - Personel ve Yönetim Paneli</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#5c3a21">
+    
+    <link rel="apple-touch-icon" href="logo.webp">
+    <link rel="icon" href="logo.webp">
 
+    <!-- Supabase ve Export (Excel/PDF) Kütüphaneleri -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --waffle-dark: #4a2e1b;
+            --waffle-main: #6f4e37;
+            --waffle-gold: #e6b85c;
+            --waffle-cream: #fff9f0;
+            --accent-orange: #e67e22;
+            --accent-green: #27ae60;
+            --accent-red: #e74c3c;
+            --accent-blue: #3498db;
+            --text-dark: #2c3e50;
+            --border-warm: #f0dec9;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #fdfbf7 0%, #faebd7 100%);
+            margin: 0;
+            padding: 10px;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        /* Mobil Uyumlu Esnek Ana Konteyner */
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 22px;
+            box-shadow: 0 15px 35px rgba(95, 61, 38, 0.15);
+            border: 3px solid var(--waffle-gold);
+            box-sizing: border-box;
+            margin: auto;
+        }
+
+        /* Merkez Yönetim Ekranı İçin Tam Duyarlı (Responsive) Izgara Düzeni */
+        .container-admin {
+            width: 100% !important;
+            max-width: 1250px !important;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 18px 45px rgba(95, 61, 38, 0.18);
+            border: 3px solid var(--waffle-gold);
+            box-sizing: border-box;
+            margin: auto;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        /* Mobil ekranlarda (telefon ve küçük tabletler) yönetici panelini tek sütuna indirir */
+        @media (max-width: 900px) {
+            body { padding: 5px; }
+            .container-admin {
+                padding: 12px;
+                border-radius: 14px;
+            }
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 15px;
+                border-radius: 16px;
+            }
+        }
+        
+        .logo-container {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .logo-container img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--waffle-gold);
+            box-shadow: 0 6px 15px rgba(111,78,55,0.25);
+            object-fit: cover;
+        }
+        
+        h2 {
+            color: var(--waffle-dark);
+            text-align: center;
+            margin: 0 0 5px 0;
+            font-size: 22px;
+            font-weight: 800;
+        }
+        h3 {
+            color: var(--waffle-main);
+            text-align: center;
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 13px 16px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, var(--waffle-main), var(--waffle-dark));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(111,78,55,0.3);
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+        
+        .btn-branch {
+            background: linear-gradient(135deg, #ffffff, var(--waffle-cream));
+            color: var(--waffle-dark);
+            border: 2px solid var(--waffle-gold);
+            box-shadow: 0 3px 10px rgba(230,184,92,0.2);
+            font-weight: 700;
+        }
+
+        .btn-qr-scan { background: linear-gradient(135deg, #2ecc71, #27ae60); font-size: 15px; }
+        .btn-back { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+        .btn-danger { background: linear-gradient(135deg, #ff6b6b, #ee5253); }
+        .btn-warning { background: linear-gradient(135deg, #feca57, #ff9f43); color: #fff; }
+        .btn-success { background: linear-gradient(135deg, #2ed573, #26af5f); color: #fff; }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .action-btn {
+            padding: 12px 8px;
+            font-size: 12px;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+            text-align: center;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .action-btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
+        
+        .btn-work-in { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .btn-work-out { background: linear-gradient(135deg, #ff6b6b, #ee5253); }
+        .btn-meal-in { background: linear-gradient(135deg, #54a0ff, #2e86de); }
+        .btn-meal-out { background: linear-gradient(135deg, #ff9f43, #e67e22); }
+        .btn-break-in { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .btn-break-out { background: linear-gradient(135deg, #f39c12, #d35400); }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 11px 12px;
+            margin: 5px 0 10px 0;
+            border: 2px solid var(--border-warm);
+            border-radius: 10px;
+            box-sizing: border-box;
+            background: var(--waffle-cream);
+            font-size: 13px;
+            color: var(--text-dark);
+        }
+        select:focus, input:focus, textarea:focus {
+            border-color: var(--waffle-main);
+            outline: none;
+            background: #fff;
+        }
+        
+        .hidden { display: none !important; }
+        
+        .card {
+            background: #fffaf5;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            border: 2px solid var(--border-warm);
+            box-sizing: border-box;
+        }
+
+        .msg-box {
+            background: linear-gradient(135deg, #fff3cd, #ffe8a1);
+            color: #856404;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            border: 1px solid #ffeeba;
+            font-weight: 500;
+        }
+
+        .stats {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #fef6ec, #faebd7);
+            padding: 10px;
+            border-radius: 12px;
+            flex: 1;
+            text-align: center;
+            font-size: 11px;
+            color: var(--waffle-main);
+            border: 2px solid var(--waffle-gold);
+            font-weight: 600;
+        }
+        
+        .log-list {
+            font-size: 11px;
+            max-height: 100px;
+            overflow-y: auto;
+            padding-left: 12px;
+            margin: 0;
+            color: #555;
+        }
+        .log-list li { margin-bottom: 5px; }
+        
+        table {
+            width: 100%;
+            font-size: 11px;
+            border-collapse: collapse;
+            margin-top: 6px;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        table, th, td {
+            border: 1px solid var(--border-warm);
+            padding: 6px;
+            text-align: center;
+        }
+        th {
+            background: #faebd7;
+            color: var(--waffle-dark);
+            font-weight: 700;
+        }
+        
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+    </style>
+</head>
+<body id="body-layout">
+
+<div class="container" id="main-container-box">
+    <div class="logo-container">
+        <img src="logo.webp" alt="Sweet Waffle Logo">
+    </div>
+    <h2>Sweet Waffle</h2>
+
+    <!-- 1. LOKASYON SEÇİMİ -->
+    <div id="main-selection-screen">
+        <h3>Şube Seçimi Yapınız</h3>
+        <button class="btn btn-branch" onclick="selectLocation('MerkezYonetim')">🏢 Merkez (Yönetim & Takip)</button>
+        <button class="btn btn-branch" onclick="selectLocation('Kurtköy')">📍 Kurtköy Şubesi</button>
+        <button class="btn btn-branch" onclick="selectLocation('Soğanlık')">📍 Soğanlık Şubesi</button>
+        <button class="btn btn-branch" onclick="selectLocation('Yeni')">📍 Yeni Şube</button>
+    </div>
+
+    <!-- 1.B. MERKEZ GİRİŞ ŞİFRE EKRANI -->
+    <div id="admin-login-screen" class="hidden">
+        <h3>🏢 Merkez Yönetim Girişi</h3>
+        <label><strong>Yönetici Şifresi:</strong></label>
+        <input type="password" id="admin-password" placeholder="Şifrenizi girin (Örn: 5678)">
+        <button class="btn" onclick="verifyAdminLogin()">Panele Giriş Yap</button>
+        <button class="btn btn-back" onclick="goBackToMain()">← Ana Menüye Dön</button>
+    </div>
+
+    <!-- 2. ŞUBE PERSONEL GİRİŞ EKRANI -->
+    <div id="login-screen" class="hidden">
+        <h3 id="login-title">Şube Girişi</h3>
+        
+        <label><strong>Personel Seçin:</strong></label>
+        <select id="staff-select">
+            <option value="">Personel Seçiniz...</option>
+        </select>
+
+        <label><strong>Şifre:</strong></label>
+        <input type="password" id="staff-password" placeholder="Şifreniz (Örn: 1234)">
+
+        <button class="btn" onclick="login()">Sisteme Giriş Yap</button>
+        <button class="btn btn-back" onclick="goBackToMain()">← Ana Menüye Dön</button>
+    </div>
+
+    <!-- 3. PERSONEL PANELİ -->
+    <div id="panel-screen" class="hidden">
+        <h3 id="welcome-title" style="margin-bottom: 2px;">Hoş Geldiniz</h3>
+        <p id="user-branch-info" style="text-align: center; color: var(--waffle-main); font-size: 12px; margin-bottom: 10px; font-weight: 700;"></p>
+
+        <div id="dynamic-alert-container"></div>
+        <div id="center-msg-wrapper"></div>
+
+        <!-- Sayaç ve Geri Sayım Bilgilendirmesi -->
+        <div id="active-timer-box" class="hidden" style="background: linear-gradient(135deg, #d1ecf1, #bee5eb); color: #0c5460; padding: 10px; border-radius: 12px; margin-bottom: 12px; font-weight: 700; text-align: center; border: 2px solid #17a2b8; font-size: 12px;">
+            ⏳ Kalan Süre: <span id="countdown-display">00:00</span>
+        </div>
+
+        <!-- Personelin Kendi Haftalık Vardiya ve İzin Programı Görüntüleme Alanı -->
+        <div class="card" style="background: #fffdf9; border-color: var(--waffle-gold);">
+            <strong style="font-size: 11px; color: var(--waffle-dark); display: block; margin-bottom: 5px; text-transform: uppercase;">📅 Haftalık Çalışma & İzin Programım</strong>
+            <div style="max-height: 110px; overflow-y: auto;">
+                <table>
+                    <thead>
+                        <tr><th>Gün</th><th>Çalışma Saatleri</th><th>Durum</th></tr>
+                    </thead>
+                    <tbody id="user-shift-view-table">
+                        <tr><td colspan="3">Merkez henüz program tanımlamadı.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <button class="btn btn-qr-scan" onclick="openQrScannerWithGpsCheck()">📍📷 Konumlu QR Kod Okut</button>
+
+        <div class="card" style="padding: 12px;">
+            <strong style="font-size: 11px; color: var(--waffle-dark); display: block; margin-bottom: 8px; text-transform: uppercase;">⏱️ Hızlı Çalışma İşlemleri</strong>
+            <div class="action-grid">
+                <button class="action-btn btn-work-in" onclick="triggerAction('İşe Giriş', 0)">🟢 İşe Giriş</button>
+                <button class="action-btn btn-work-out" onclick="triggerAction('İşten Çıkış', 0)">🔴 İşten Çıkış</button>
+                <button class="action-btn btn-meal-in" onclick="triggerAction('Yemek Molası Çıkış', 45)">🍽️ Yemek Çıkış</button>
+                <button class="action-btn btn-meal-out" onclick="triggerAction('Yemek Molası Dönüş', 0)">🔙 Yemek Dönüş</button>
+                <button class="action-btn btn-break-in" onclick="triggerAction('Normal Mola Çıkış', 15)">☕ Mola Çıkış</button>
+                <button class="action-btn btn-break-out" onclick="triggerAction('Normal Mola Dönüş', 0)">🔙 Mola Dönüş</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box"><strong>Haftalık Çalışma</strong><br><span id="weekly-hours" style="font-size: 13px; font-weight: 800; color: var(--waffle-dark);">0s 0d</span></div>
+            <div class="stat-box"><strong>Aylık Çalışma</strong><br><span id="monthly-hours" style="font-size: 13px; font-weight: 800; color: var(--waffle-dark);">0s 0d</span></div>
+        </div>
+
+        <div class="card" style="margin-bottom: 12px;">
+            <strong style="font-size: 11px; color: var(--waffle-dark); text-transform: uppercase;">📋 Günlük Hareketlerim</strong>
+            <ul class="log-list" id="today-logs" style="margin-top: 6px;">
+                <li>Kayıt bulunmuyor.</li>
+            </ul>
+        </div>
+
+        <button class="btn btn-back" onclick="logout()">Güvenli Çıkış Yap</button>
+    </div>
+
+    <!-- 3.B. QR KAMERA TARAYICI EKRANI -->
+    <div id="qr-scanner-screen" class="hidden">
+        <h3>📷 QR Kod Tarayıcı</h3>
+        <p style="text-align: center; font-size: 12px; color: #666;">Şube çevresi (500m) onaylandıktan sonra kamera açılır.</p>
+        <div id="reader"></div>
+        <button class="btn btn-back" onclick="closeQrScanner()">Kamerayı Kapat</button>
+    </div>
+
+    <!-- 4. MERKEZ YÖNETİM PANELİ (TAM EKRAN PROFESYONEL VE MOBİL UYUMLU) -->
+    <div id="admin-screen" class="hidden">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--waffle-gold); padding-bottom: 8px; margin-bottom: 14px; gap: 8px;">
+            <h3 style="margin: 0; color: var(--waffle-dark); font-size: 17px; text-align: left;">🏢 Sweet Waffle - Yönetim Masası</h3>
+            <div style="display: flex; gap: 4px;">
+                <button class="btn btn-success" style="display:inline-block; width:auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="exportToExcel()">📊 Excel</button>
+                <button class="btn btn-danger" style="display:inline-block; width:auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="exportToPDF()">📑 PDF</button>
+            </div>
+        </div>
+
+        <div class="admin-grid">
+            
+            <div>
+                <div class="card" style="border: 2px solid var(--waffle-gold); background: #fffdf9;">
+                    <strong style="font-size: 12px; color: var(--waffle-dark); display: block; margin-bottom: 5px;">📁 Personel Dosyası & Detaylı Rapor</strong>
+                    <select id="admin-dossier-select" onchange="renderAdminStaffDossier()" style="margin-top: 4px; padding: 6px; font-size: 11px;">
+                        <option value="">Rapor için personel seçiniz...</option>
+                    </select>
+                    
+                    <div id="dossier-result-area" class="hidden" style="margin-top: 6px; background: #fff; padding: 6px; border-radius: 8px; border: 1px solid var(--border-warm);">
+                        <div style="font-size: 10px; margin-bottom: 3px; font-weight: 700; color: var(--waffle-dark);" id="dossier-summary-text"></div>
+                        <div style="max-height: 80px; overflow-y: auto;">
+                            <table>
+                               <thead>
+                                    <tr><th>Şube</th><th>İşlem</th><th>Tarih/Saat</th></tr>
+                               </thead>
+                               <tbody id="dossier-logs-table"><tr><td colspan="3">Veri yok</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="background: #fffdf9;">
+                    <strong style="font-size: 12px; color: var(--waffle-dark); display: block; margin-bottom: 5px;">⏰ Haftalık Çalışma & İzin Planlayıcı</strong>
+                    
+                    <div style="display: flex; gap: 6px;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 10px; font-weight: bold;">Şube:</label>
+                            <select id="shift-branch-select" onchange="populateShiftStaffSelect()" style="padding: 5px; font-size: 11px;">
+                                <option value="Kurtköy">Kurtköy</option>
+                                <option value="Soğanlık">Soğanlık</option>
+                                <option value="Yeni">Yeni Şube</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 10px; font-weight: bold;">Personel:</label>
+                            <select id="shift-staff-select" style="padding: 5px; font-size: 11px;"></select>
+                        </div>
+                    </div>
+
+                    <div style="max-height: 150px; overflow-y: auto; margin-top: 5px;">
+                        <table>
+                            <thead>
+                                <tr><th>Gün</th><th>Giriş</th><th>Çıkış</th><th>İzin?</th></tr>
+                            </thead>
+                            <tbody id="admin-weekly-shift-tbody"></tbody>
+                        </table>
+                    </div>
+                    <button class="btn" style="margin: 6px 0 0 0; padding: 9px; font-size: 11px;" onclick="saveStaffWeeklySchedule()">Haftalık Vardiya Planını Kaydet</button>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <strong style="font-size: 12px; color: var(--waffle-dark);">📢 Personele Bildirim Gönder:</strong>
+                    <textarea id="admin-msg-input" rows="2" placeholder="Tüm personel telefonlarına anlık düşecek duyuruyu yazın..." style="font-size:11px;"></textarea>
+                    <button class="btn" style="margin: 0; padding: 8px; font-size: 11px;" onclick="sendBroadcastMessage()">Bildirimi Yayınla</button>
+                </div>
+
+                <div class="card">
+                    <strong style="font-size: 12px; color: var(--waffle-dark);">📋 Aktif Duyurular:</strong>
+                    <div id="admin-messages-list" style="max-height: 90px; overflow-y: auto; margin-top: 5px;">
+                        <p style="font-size: 11px; color: #777;">Aktif duyuru yok.</p>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 8px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 5px; align-items: center; justify-content: space-between;">
+                        <strong style="font-size: 12px; color: var(--waffle-dark);">🔍 Şube ve Personel Denetimi</strong>
+                        <div style="display: flex; gap: 4px; width: 100%;">
+                            <select id="branch-filter" onchange="updateAdminTable()" style="margin: 0; padding: 4px; font-size: 10px; flex: 1;">
+                                <option value="Tümü">Tüm Şubeler</option>
+                                <option value="Kurtköy">Kurtköy</option>
+                                <option value="Soğanlık">Soğanlık</option>
+                                <option value="Yeni">Yeni Şube</option>
+                            </select>
+                            <select id="staff-filter" onchange="updateAdminTable()" style="margin: 0; padding: 4px; font-size: 10px; flex: 1;">
+                                <option value="Tümü">Tüm Personeller</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="max-height: 120px; overflow-y: auto;">
+                        <table>
+                            <thead>
+                                <tr><th>Şube</th><th>Personel</th><th>İşlem</th><th>Saat</th><th>İşlem</th></tr>
+                            </thead>
+                            <tbody id="admin-log-table">
+                                <tr><td colspan="5">Kayıt bulunmuyor.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <button class="btn btn-back" style="margin-top: 12px;" onclick="goBackToMain()">← Ana Menüye Dön</button>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://yatgnoiybbjvmreikeqs.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_8BxYi7oOUnHvkHAJQNaitQ_kKlHk_Y_';
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const database = {
+        "Kurtköy": { staff: [{ name: "Nesrin POLAT", pass: "1234" }, { name: "Mehmet Demir", pass: "1234" }], lat: 40.91417, lng: 29.29917 },
+        "Soğanlık": { staff: [{ name: "Can Çelik", pass: "1234" }, { name: "Elif Demir", pass: "1234" }], lat: 40.91270, lng: 29.19200 },
+        "Yeni": { staff: [{ name: "Burak Şahin", pass: "1234" }, { name: "Zeynep Koç", pass: "1234" }], lat: 41.00820, lng: 28.97840 }
+    };
+
+    const ADMIN_PASS = "5678";
+    const DAYS_OF_WEEK = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+
+    let currentUser = null;
+    let currentBranch = null;
+    let countdownInterval = null;
+    let html5QrCode = null;
+    window.globalLogsCache = [];
+    window.globalSchedulesCache = {};
+
+    window.addEventListener('DOMContentLoaded', () => {
+        setupRealtimeSubscriptions();
+        fetchAllData();
+        buildAdminShiftTableTemplate();
+        requestNotificationPermission();
+
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+                fetchAllData();
+            }
+        });
+    });
+
+    function requestNotificationPermission() {
+        if ("Notification" in window && Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
+    }
+
+    async function fetchAllData() {
+        await fetchMessages();
+        await fetchLogs();
+        await fetchSchedules();
+    }
+
+    function setupRealtimeSubscriptions() {
+        supabaseClient
+            .channel('public-db-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => {
+                fetchMessages();
+                if (payload.eventType === 'INSERT') {
+                    showBrowserNotification("Sweet Waffle - Yeni Duyuru", payload.new.text);
+                }
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'logs' }, () => fetchLogs())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, () => fetchSchedules())
+            .subscribe();
+    }
+
+    function showBrowserNotification(title, body) {
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification(title, { body: body, icon: "logo.webp" });
+        }
+    }
+
+    async function fetchMessages() {
+        const { data, error } = await supabaseClient.from('messages').select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+            renderUserMessages(data);
+            updateAdminMessagesList(data);
+        }
+    }
+
+    async function fetchLogs() {
+        const { data, error } = await supabaseClient.from('logs').select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+            window.globalLogsCache = data;
+            updateStaffFilterOptions();
+            updateAdminDossierOptions();
+            if(!document.getElementById("admin-screen").classList.contains("hidden")) {
+                updateAdminTable();
+                renderAdminStaffDossier();
+            }
+            if(currentUser) updateUserPanelUI();
+        }
+    }
+
+    async function fetchSchedules() {
+        const { data, error } = await supabaseClient.from('schedules').select('*');
+        if (!error && data) {
+            window.globalSchedulesCache = {};
+            data.forEach(item => {
+                window.globalSchedulesCache[item.staff_name] = item.schedule_data;
+            });
+            if(currentUser) {
+                renderUserShiftView();
+                updateUserWeeklyHoursSummary();
+            }
+        }
+    }
+
+    function buildAdminShiftTableTemplate() {
+        const tbody = document.getElementById("admin-weekly-shift-tbody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        DAYS_OF_WEEK.forEach((day, index) => {
+            let tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td style="font-weight:700; font-size:10px;">${day}</td>
+                <td><input type="time" id="in-time-${index}" value="09:00" style="margin:0; padding:2px; font-size:10px;"></td>
+                <td><input type="time" id="out-time-${index}" value="18:00" style="margin:0; padding:2px; font-size:10px;"></td>
+                <td><input type="checkbox" id="off-day-${index}" style="width:16px; height:16px; margin:0 auto; cursor:pointer;"></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        populateShiftStaffSelect();
+    }
+
+    function populateShiftStaffSelect() {
+        const branchSelect = document.getElementById("shift-branch-select");
+        const staffSelect = document.getElementById("shift-staff-select");
+        if (!branchSelect || !staffSelect) return;
+
+        const selectedBranch = branchSelect.value;
+        staffSelect.innerHTML = "";
+        if (database[selectedBranch] && database[selectedBranch].staff) {
+            database[selectedBranch].staff.forEach(emp => {
+                let opt = document.createElement("option");
+                opt.value = emp.name;
+                opt.innerText = emp.name;
+                staffSelect.appendChild(opt);
+            });
+        }
+        loadStaffExistingScheduleToAdminForm();
+        staffSelect.onchange = loadStaffExistingScheduleToAdminForm;
+    }
+
+    function loadStaffExistingScheduleToAdminForm() {
+        const staffSelect = document.getElementById("shift-staff-select");
+        if (!staffSelect || !staffSelect.value) return;
+        const staffName = staffSelect.value;
+        const staffSchedule = window.globalSchedulesCache[staffName];
+
+        DAYS_OF_WEEK.forEach((day, index) => {
+            let inInput = document.getElementById(`in-time-${index}`);
+            let outInput = document.getElementById(`out-time-${index}`);
+            let offCheck = document.getElementById(`off-day-${index}`);
+
+            if (staffSchedule && staffSchedule[day]) {
+                inInput.value = staffSchedule[day].in || "09:00";
+                outInput.value = staffSchedule[day].out || "18:00";
+                offCheck.checked = !!staffSchedule[day].isOff;
+            } else {
+                inInput.value = "09:00";
+                outInput.value = "18:00";
+                offCheck.checked = false;
+            }
+        });
+    }
+
+    async function saveStaffWeeklySchedule() {
+        const staffSelect = document.getElementById("shift-staff-select");
+        if (!staffSelect || !staffSelect.value) {
+            alert("Lütfen bir personel seçin.");
+            return;
+        }
+        const staffName = staffSelect.value;
+        let scheduleData = {};
+
+        DAYS_OF_WEEK.forEach((day, index) => {
+            scheduleData[day] = {
+                in: document.getElementById(`in-time-${index}`).value,
+                out: document.getElementById(`out-time-${index}`).value,
+                isOff: document.getElementById(`off-day-${index}`).checked
+            };
+        });
+
+        const { error } = await supabaseClient
+            .from('schedules')
+            .upsert([{ staff_name: staffName, schedule_data: scheduleData }], { onConflict: 'staff_name' });
+
+        if (error) {
+            alert("Vardiya kaydedilemedi: " + error.message);
+        } else {
+            alert(`${staffName} personelinin haftalık vardiya programı başarıyla kaydedildi!`);
+            await fetchSchedules();
+        }
+    }
+
+    function renderUserShiftView() {
+        const tbody = document.getElementById("user-shift-view-table");
+        if (!tbody || !currentUser) return;
+
+        let staffSchedule = window.globalSchedulesCache[currentUser];
+        if (!staffSchedule) {
+            tbody.innerHTML = '<tr><td colspan="3">Merkez henüz program tanımlamadı.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = "";
+        DAYS_OF_WEEK.forEach(day => {
+            let dayInfo = staffSchedule[day];
+            let tr = document.createElement("tr");
+            if (dayInfo && dayInfo.isOff) {
+                tr.innerHTML = `<td style="font-weight:700;">${day}</td><td colspan="2" style="color: #e74c3c; font-weight:700;">🏖️ İzinli Gün</td>`;
+            } else if (dayInfo) {
+                tr.innerHTML = `<td>${day}</td><td>${dayInfo.in} - ${dayInfo.out}</td><td style="color: #27ae60; font-weight:600;">Çalışma Günü</td>`;
+            } else {
+                tr.innerHTML = `<td>${day}</td><td colspan="2">Belirlenmedi</td>`;
+            }
+            tbody.appendChild(tr);
+        });
+    }
+
+    function updateUserWeeklyHoursSummary() {
+        if (!currentUser) return;
+        let staffSchedule = window.globalSchedulesCache[currentUser];
+        let totalMinutes = 0;
+
+        if (staffSchedule) {
+            Object.values(staffSchedule).forEach(day => {
+                if (day && !day.isOff && day.in && day.out) {
+                    let [inH, inM] = day.in.split(':').map(Number);
+                    let [outH, outM] = day.out.split(':').map(Number);
+                    let diff = (outH * 60 + outM) - (inH * 60 + inM);
+                    if (diff > 0) totalMinutes += diff;
+                }
+            });
+        }
+
+        let hours = Math.floor(totalMinutes / 60);
+        let minutes = totalMinutes % 60;
+        document.getElementById("weekly-hours").innerText = `${hours}s ${minutes}d`;
+        document.getElementById("monthly-hours").innerText = `${hours * 4}s ${minutes}d`;
+    }
+
+    function updateStaffFilterOptions() {
+        const staffFilterSelect = document.getElementById("staff-filter");
+        if (!staffFilterSelect) return;
+        let currentValue = staffFilterSelect.value;
+        let staffSet = new Set();
+        (window.globalLogsCache || []).forEach(l => { if(l.user) staffSet.add(l.user); });
+
+        staffFilterSelect.innerHTML = '<option value="Tümü">Tüm Personeller</option>';
+        staffSet.forEach(staffName => {
+            let opt = document.createElement("option");
+            opt.value = staffName;
+            opt.innerText = staffName;
+            staffFilterSelect.appendChild(opt);
+        });
+        if (currentValue) staffFilterSelect.value = currentValue;
+    }
+
+    function updateAdminDossierOptions() {
+        const dossierSelect = document.getElementById("admin-dossier-select");
+        if (!dossierSelect) return;
+        let currentValue = dossierSelect.value;
+        let staffSet = new Set();
+        Object.keys(database).forEach(b => database[b].staff.forEach(s => staffSet.add(s.name)));
+        (window.globalLogsCache || []).forEach(l => { if(l.user) staffSet.add(l.user); });
+
+        dossierSelect.innerHTML = '<option value="">Rapor için personel seçiniz...</option>';
+        staffSet.forEach(staffName => {
+            let opt = document.createElement("option");
+            opt.value = staffName;
+            opt.innerText = staffName;
+            dossierSelect.appendChild(opt);
+        });
+        if (currentValue) dossierSelect.value = currentValue;
+    }
+
+    function renderAdminStaffDossier() {
+        const select = document.getElementById("admin-dossier-select");
+        const resultArea = document.getElementById("dossier-result-area");
+        const summaryText = document.getElementById("dossier-summary-text");
+        const tbody = document.getElementById("dossier-logs-table");
+
+        if (!select || !select.value) {
+            if (resultArea) resultArea.classList.add("hidden");
+            return;
+        }
+
+        const selectedStaff = select.value;
+        resultArea.classList.remove("hidden");
+        let logs = (window.globalLogsCache || []).filter(l => l.user === selectedStaff);
+        
+        let workDays = new Set();
+        let izinCount = 0;
+        logs.forEach(l => {
+            if(l.created_at) workDays.add(l.created_at.split('T')[0]);
+            if(l.action && l.action.toLowerCase().includes('izin')) izinCount++;
+        });
+
+        let totalMinutes = logs.length * 240;
+        summaryText.innerHTML = `👤 <b>${selectedStaff}</b> | Gün: ${workDays.size} | İzin: ${izinCount} | Toplam: ${Math.floor(totalMinutes/60)}s ${totalMinutes%60}dk`;
+
+        if (logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3">Kayıt yok</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = "";
+        logs.forEach(log => {
+            let tr = document.createElement("tr");
+            tr.innerHTML = `<td>${log.branch || 'Merkez'}</td><td>${log.action}</td><td>${log.created_at ? log.created_at.replace('T', ' ').substring(0, 16) : log.time}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function sendBroadcastMessage() {
+        const msgText = document.getElementById("admin-msg-input").value;
+        if (!msgText) { alert("Duyuru metni yazın."); return; }
+        const { error } = await supabaseClient.from('messages').insert([{ text: msgText }]);
+        if (!error) {
+            document.getElementById("admin-msg-input").value = "";
+            alert("Bildirim yayınlandı!");
+            fetchAllData();
+        }
+    }
+
+    async function deleteMessage(id) {
+        await supabaseClient.from('messages').delete().eq('id', id);
+        fetchAllData();
+    }
+
+    async function deleteLog(id) {
+        await supabaseClient.from('logs').delete().eq('id', id);
+        fetchAllData();
+    }
+
+    async function editLog(id) {
+        let logItem = (window.globalLogsCache || []).find(l => String(l.id) === String(id));
+        let newAction = prompt("İşlemi düzenle:", logItem ? logItem.action : "");
+        if (newAction === null) return;
+        let newTime = prompt("Saati düzenle:", logItem ? logItem.time : "");
+        if (newTime === null) return;
+
+        await supabaseClient.from('logs').update({ action: newAction, time: newTime }).eq('id', id);
+        fetchAllData();
+    }
+
+    function exportToExcel() {
+        let logs = window.globalLogsCache || [];
+        if (logs.length === 0) { alert("Veri yok"); return; }
+        let dataToExport = logs.map(l => ({ "Şube": l.branch, "Personel": l.user, "İşlem": l.action, "Saat": l.time, "Tarih": l.created_at || "" }));
+        let worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        let workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Raporlar");
+        XLSX.writeFile(workbook, "SweetWaffle_Rapor.xlsx");
+    }
+
+    function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        let doc = new jsPDF();
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text("Sweet Waffle - Rapor", 14, 20);
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        let logs = window.globalLogsCache || [];
+        let y = 30;
+        logs.slice(0, 20).forEach((l, idx) => {
+            doc.text(`${idx+1}. Şube: ${l.branch} | Personel: ${l.user} | İşlem: ${l.action}`, 14, y);
+            y += 8;
+            if(y > 280) { doc.addPage(); y = 20; }
+        });
+        doc.save("SweetWaffle_Rapor.pdf");
+    }
+
+    function selectLocation(branchKey) {
+        const boxContainer = document.getElementById("main-container-box");
+        if (branchKey === 'MerkezYonetim') {
+            boxContainer.className = "container-admin";
+            document.getElementById("main-selection-screen").classList.add("hidden");
+            document.getElementById("admin-login-screen").classList.remove("hidden");
+            document.getElementById("admin-password").value = "";
+        } else {
+            boxContainer.className = "container";
+            currentBranch = branchKey;
+            document.getElementById("main-selection-screen").classList.add("hidden");
+            document.getElementById("login-screen").classList.remove("hidden");
+            document.getElementById("login-title").innerText = branchKey + " Şubesi Girişi";
+            loadStaff(branchKey);
+        }
+    }
+
+    function verifyAdminLogin() {
+        if (document.getElementById("admin-password").value === ADMIN_PASS) {
+            document.getElementById("admin-login-screen").classList.add("hidden");
+            document.getElementById("admin-screen").classList.remove("hidden");
+            fetchAllData();
+            buildAdminShiftTableTemplate();
+        } else {
+            alert("Hatalı Şifre!");
+        }
+    }
+
+    function goBackToMain() {
+        const boxContainer = document.getElementById("main-container-box");
+        boxContainer.className = "container";
+        document.getElementById("login-screen").classList.add("hidden");
+        document.getElementById("admin-login-screen").classList.add("hidden");
+        document.getElementById("admin-screen").classList.add("hidden");
+        document.getElementById("panel-screen").classList.add("hidden");
+        document.getElementById("qr-scanner-screen").classList.add("hidden");
+        document.getElementById("main-selection-screen").classList.remove("hidden");
+        document.getElementById("staff-password").value = "";
+        document.getElementById("admin-password").value = "";
+    }
+
+    function loadStaff(branch) {
+        const staffSelect = document.getElementById("staff-select");
+        staffSelect.innerHTML = '<option value="">Personel Seçiniz...</option>';
+        if (database[branch] && database[branch].staff) {
+            database[branch].staff.forEach(emp => {
+                let opt = document.createElement("option");
+                opt.value = emp.name;
+                opt.innerText = emp.name;
+                staffSelect.appendChild(opt);
+            });
+        }
+    }
+
+    function login() {
+        const staff = document.getElementById("staff-select").value;
+        const pass = document.getElementById("staff-password").value;
+        if (!staff || !pass) { alert("Personel ve şifre girin."); return; }
+
+        let emp = database[currentBranch].staff.find(e => e.name === staff && e.pass === pass);
+        if (emp) {
+            currentUser = emp.name;
+            document.getElementById("login-screen").classList.add("hidden");
+            document.getElementById("panel-screen").classList.remove("hidden");
+            document.getElementById("welcome-title").innerText = "Sayın " + currentUser;
+            document.getElementById("user-branch-info").innerText = "Şube: " + currentBranch;
+            fetchAllData();
+            renderUserShiftView();
+            updateUserWeeklyHoursSummary();
+            updateUserPanelUI();
+        } else {
+            alert("Hatalı şifre!");
+        }
+    }
+
+    function logout() {
+        currentUser = null;
+        currentBranch = null;
+        document.getElementById("staff-password").value = "";
+        if (countdownInterval) clearInterval(countdownInterval);
+        document.getElementById("panel-screen").classList.add("hidden");
+        document.getElementById("main-selection-screen").classList.remove("hidden");
+    }
+
+    function renderUserMessages(messages) {
+        const container = document.getElementById("center-msg-wrapper");
+        if (!messages || messages.length === 0) { container.innerHTML = ""; return; }
+        container.innerHTML = "";
+        messages.forEach(msgObj => {
+            let box = document.createElement("div");
+            box.className = "msg-box";
+            box.innerHTML = `📢 <strong>Merkezden Bildirim:</strong><p style="margin:4px 0 0 0;">${msgObj.text}</p>`;
+            container.appendChild(box);
+        });
+    }
+
+    function updateUserPanelUI() {
+        if (!currentUser || !window.globalLogsCache) return;
+        let userLogs = window.globalLogsCache.filter(l => l.user === currentUser);
+        const list = document.getElementById("today-logs");
+        if (userLogs.length === 0) {
+            list.innerHTML = "<li>Kayıt bulunmuyor.</li>";
+        } else {
+            list.innerHTML = "";
+            userLogs.forEach(log => {
+                let li = document.createElement("li");
+                li.innerText = `${log.action} - ${log.time} (${log.branch})`;
+                list.appendChild(li);
+            });
+        }
+    }
+
+    function openQrScannerWithGpsCheck() {
+        if (!navigator.geolocation) { alert("GPS desteklenmiyor."); return; }
+        alert("Konum kontrol ediliyor...");
+        navigator.geolocation.getCurrentPosition(position => {
+            let dist = calculateDistance(position.coords.latitude, position.coords.longitude, database[currentBranch].lat, database[currentBranch].lng);
+            if (dist > 500) { alert(`Şube konumunda değilsiniz! Uzaklık: ${Math.round(dist)}m.`); return; }
+            startCameraScanner();
+        }, () => alert("Konum alınamadı."), { enableHighAccuracy: true });
+    }
+
+    function startCameraScanner() {
+        document.getElementById("panel-screen").classList.add("hidden");
+        document.getElementById("qr-scanner-screen").classList.remove("hidden");
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, () => {
+            closeQrScanner();
+            triggerAction('GPS + QR Onaylı İşe Giriş', 0);
+        }, () => {});
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        let R = 6371e3;
+        let dLat = (lat2 - lat1) * Math.PI / 180;
+        let dLon = (lon2 - lon1) * Math.PI / 180;
+        let a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+    }
+
+    function closeQrScanner() {
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                document.getElementById("qr-scanner-screen").classList.add("hidden");
+                document.getElementById("panel-screen").classList.remove("hidden");
+            }).catch(() => {
+                document.getElementById("qr-scanner-screen").classList.add("hidden");
+                document.getElementById("panel-screen").classList.remove("hidden");
+            });
+        }
+    }
+
+    async function triggerAction(actionName, durationMins) {
+        let timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const { error } = await supabaseClient.from('logs').insert([{ branch: currentBranch, user: currentUser, action: actionName, time: timeStr }]);
+        if (error) { alert("Hata: " + error.message); return; }
+
+        if (durationMins > 0) {
+            startCountdown(durationMins);
+        } else {
+            if (countdownInterval) clearInterval(countdownInterval);
+            document.getElementById("active-timer-box").classList.add("hidden");
+        }
+
+        await fetchAllData();
+    }
+
+    function startCountdown(durationMinutes) {
+        if (countdownInterval) clearInterval(countdownInterval);
+        let timerBox = document.getElementById("active-timer-box");
+        let display = document.getElementById("countdown-display");
+        timerBox.classList.remove("hidden");
+
+        let targetTime = Date.now() + durationMinutes * 60 * 1000;
+
+        countdownInterval = setInterval(() => {
+            let remaining = targetTime - Date.now();
+            if (remaining <= 0) {
+                clearInterval(countdownInterval);
+                display.innerText = "Süre Sona Erdi!";
+                showBrowserNotification("Sweet Waffle", "Molalarınız / Süreniz dolmuştur.");
+                return;
+            }
+            let mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+            let secs = Math.floor((remaining % (1000 * 60)) / 1000);
+            display.innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }, 1000);
+    }
+
+    function updateAdminMessagesList(messages) {
+        const container = document.getElementById("admin-messages-list");
+        if (!messages || messages.length === 0) { container.innerHTML = '<p style="font-size:11px; color:#777;">Aktif duyuru yok.</p>'; return; }
+        container.innerHTML = "";
+        messages.forEach(msgObj => {
+            let div = document.createElement("div");
+            div.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 4px 6px; margin-bottom: 3px; border-radius: 5px; border: 1px solid var(--border-warm); font-size: 10px;";
+            div.innerHTML = `<span style="flex-grow:1; margin-right:6px;">${msgObj.text}</span><button class="btn btn-danger" style="width:auto; padding:2px 4px; margin:0; font-size:9px;" onclick="deleteMessage('${msgObj.id}')">Sil</button>`;
+            container.appendChild(div);
+        });
+    }
+
+    function updateAdminTable() {
+        const tbody = document.getElementById("admin-log-table");
+        let logs = window.globalLogsCache || [];
+        const branchFilter = document.getElementById("branch-filter").value;
+        const staffFilter = document.getElementById("staff-filter").value;
+        
+        if (branchFilter !== "Tümü") logs = logs.filter(l => l.branch === branchFilter);
+        if (staffFilter !== "Tümü") logs = logs.filter(l => l.user === staffFilter);
+
+        if (logs.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Kayıt yok.</td></tr>'; return; }
+        tbody.innerHTML = "";
+        logs.forEach(log => {
+            let tr = document.createElement("tr");
+            tr.innerHTML = `<td>${log.branch}</td><td>${log.user}</td><td>${log.action}</td><td>${log.time}</td><td><button class="btn btn-warning" style="width:auto; padding:2px 4px; margin:1px; font-size:9px; display:inline-block;" onclick="editLog('${log.id}')">Düzenle</button><button class="btn btn-danger" style="width:auto; padding:2px 4px; margin:1px; font-size:9px; display:inline-block;" onclick="deleteLog('${log.id}')">Sil</button></td>`;
+            tbody.appendChild(tr);
+        });
+    }
+</script>
+
+</body>
+</html>
