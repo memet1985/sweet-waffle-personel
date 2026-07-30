@@ -142,6 +142,7 @@
         .hidden { display: none !important; }
         .card { background: #fffaf5; padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 2px solid var(--border-warm); box-sizing: border-box; }
         .msg-box { background: linear-gradient(135deg, #fff3cd, #ffe8a1); color: #856404; padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 12px; border: 1px solid #ffeeba; font-weight: 500; text-align: left; }
+        .toast { position: fixed; bottom: 20px; left: 50%<b>; transform: translateX(-50%); background: #2c3e50; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 9999; transition: opacity 0.3s; }
         .stats { display: flex; gap: 8px; margin-bottom: 10px; }
         .stat-box { background: linear-gradient(135deg, #fef6ec, #faebd7); padding: 8px; border-radius: 10px; flex: 1; text-align: center; font-size: 11px; color: var(--waffle-main); border: 2px solid var(--waffle-gold); font-weight: 600; }
         .log-list { font-size: 11px; max-height: 90px; overflow-y: auto; padding-left: 10px; margin: 0; color: #555; text-align: left; }
@@ -154,6 +155,8 @@
     </style>
 </head>
 <body id="body-layout">
+
+<div id="toast-container"></div>
 
 <div class="container" id="main-container-box">
     <div class="logo-container">
@@ -375,6 +378,16 @@
     window.globalSchedulesCache = {};
     window.globalMessagesCache = [];
 
+    function showToast(msg) {
+        let existing = document.querySelector('.toast');
+        if(existing) existing.remove();
+        let t = document.createElement('div');
+        t.className = 'toast';
+        t.innerText = msg;
+        document.body.appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2500);
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
         setupRealtimeSubscriptions();
         fetchAllData();
@@ -389,17 +402,7 @@
 
     function registerServiceWorker() {
         if ('serviceWorker' in navigator && 'Notification' in window) {
-            navigator.serviceWorker.register('/sw.js')
-                .then(function(registration) {
-                    Notification.requestPermission().then(function(permission) {
-                        if (permission === 'granted') {
-                            console.log('Kilit ekranı bildirim izni onaylandı.');
-                        }
-                    });
-                })
-                .catch(function(error) {
-                    console.log('Servis kaydı başarısız:', error);
-                });
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
         }
     }
 
@@ -524,8 +527,7 @@
         setTimeout(async () => {
             if (window.confirm("Bu duyuruyu silmek istediğinize emin misiniz?")) {
                 const { error } = await supabaseClient.from('messages').delete().eq('id', id);
-                if (error) alert("Silme hatası: " + error.message);
-                else fetchMessages();
+                if (!error) fetchMessages();
             }
         }, 50);
     }
@@ -535,8 +537,7 @@
             const newText = prompt("Duyuruyu düzenleyin:", oldText);
             if (newText !== null && newText.trim() !== "") {
                 const { error } = await supabaseClient.from('messages').update({ text: newText.trim() }).eq('id', id);
-                if (error) alert("Güncelleme hatası: " + error.message);
-                else fetchMessages();
+                if (!error) fetchMessages();
             }
         }, 50);
     }
@@ -544,13 +545,11 @@
     async function sendBroadcastMessage() {
         const input = document.getElementById("admin-msg-input");
         const text = input.value.trim();
-        if (!text) { alert("Lütfen duyuru metni yazın."); return; }
+        if (!text) { showToast("Lütfen duyuru metni yazın."); return; }
 
         const { error } = await supabaseClient.from('messages').insert([{ text: text }]);
-        if (error) {
-            alert("Bildirim gönderilemedi: " + error.message);
-        } else {
-            alert("Duyuru başarıyla yayınlandı.");
+        if (!error) {
+            showToast("Duyuru yayınlandı.");
             input.value = "";
             fetchMessages();
         }
@@ -637,7 +636,7 @@
 
     async function saveStaffWeeklySchedule() {
         const staffSelect = document.getElementById("shift-staff-select");
-        if (!staffSelect || !staffSelect.value) { alert("Lütfen bir personel seçin."); return; }
+        if (!staffSelect || !staffSelect.value) { showToast("Lütfen bir personel seçin."); return; }
         const staffName = staffSelect.value;
         let scheduleData = {};
         DAYS_OF_WEEK.forEach((day, index) => {
@@ -649,8 +648,7 @@
         });
 
         const { error } = await supabaseClient.from('schedules').upsert({ staff_name: staffName, schedule_data: scheduleData }, { onConflict: 'staff_name' });
-        if (error) alert("Vardiya kaydedilirken hata: " + error.message);
-        else { alert(staffName + " vardiyası kaydedildi."); fetchSchedules(); }
+        if (!error) { showToast(staffName + " vardiyası kaydedildi."); fetchSchedules(); }
     }
 
     function selectLocation(branchName) {
@@ -686,7 +684,7 @@
             document.getElementById("main-container-box").classList.add("container-admin");
             document.getElementById("admin-password").value = "";
             updateAdminTable();
-        } else { alert("Yönetici şifresi hatalı!"); }
+        } else { showToast("Yönetici şifresi hatalı!"); }
     }
 
     function login() {
@@ -702,7 +700,7 @@
             document.getElementById("user-branch-info").innerText = "📍 Şube: " + currentBranch;
             document.getElementById("staff-password").value = "";
             updateUserPanelUI();
-        } else { alert("Şifre hatalı!"); }
+        } else { showToast("Şifre hatalı!"); }
     }
 
     function logout() {
@@ -726,7 +724,7 @@
 
     async function triggerAction(actionName, durationMinutes = 0) {
         if (!currentUser || !currentBranch) {
-            alert("Lütfen önce şube seçip personel girişi yapın!");
+            showToast("Lütfen önce şube seçip personel girişi yapın!");
             return;
         }
         const now = new Date();
@@ -741,10 +739,10 @@
         }]);
         
         if (error) {
-            alert("Kayıt eklenirken hata oluştu: " + error.message);
+            showToast("Kayıt hatası: " + error.message);
             return;
         }
-        alert(actionName + " kaydedildi.");
+        showToast(actionName + " kaydedildi.");
 
         if (durationMinutes > 0) startCountdown(durationMinutes * 60);
         else if (actionName.includes("Dönüş") || actionName === "İşten Çıkış") stopCountdown();
@@ -758,7 +756,7 @@
         document.getElementById("active-timer-box").classList.remove("hidden");
         countdownInterval = setInterval(() => {
             let rem = Math.floor((end - Date.now()) / 1000);
-            if (rem <= 0) { stopCountdown(); alert("Süreniz doldu!"); }
+            if (rem <= 0) { stopCountdown(); showToast("Süreniz doldu!"); }
             else {
                 let m = Math.floor(rem / 60), s = rem % 60;
                 document.getElementById("countdown-display").innerText = (m < 10 ? "0"+m : m) + ":" + (s < 10 ? "0"+s : s);
@@ -834,7 +832,7 @@
         html5QrCode = new Html5Qrcode("reader");
         html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, qr => {
             if (qr.includes(currentBranch)) { closeQrScanner(); triggerAction('İşe Giriş (QR)', 0); }
-            else alert("Bu QR kod bu şubeye ait değil!");
+            else showToast("Bu QR kod bu şubeye ait değil!");
         }, () => {});
     }
 
