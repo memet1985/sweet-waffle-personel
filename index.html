@@ -495,7 +495,6 @@
         });
     }
 
-    // Merkez Yönetim Panelindeki Mesaj Listesi (Çalışan Sil ve Düzenle Butonlu)
     function updateAdminMessagesList(messages) {
         const listDiv = document.getElementById("admin-messages-list");
         if (!listDiv) return;
@@ -507,10 +506,13 @@
         messages.forEach(msg => {
             let div = document.createElement("div");
             div.style.cssText = "font-size:11px; margin:4px 0; background:#fff; padding:6px; border-radius:6px; border:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;";
+            
+            let safeText = (msg.text || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            
             div.innerHTML = `
-                <span style="flex:1; margin-right:6px;">📢 ${msg.text}</span>
+                <span style="flex:1; margin-right:6px;">📢 ${msg.text || ''}</span>
                 <div>
-                    <button class="btn-warning" style="padding:3px 6px; font-size:10px; border-radius:4px; margin-right:3px;" onclick="editAdminMessage('${msg.id}', '${msg.text.replace(/'/g, "\\'")}')">Düzenle</button>
+                    <button class="btn-warning" style="padding:3px 6px; font-size:10px; border-radius:4px; margin-right:3px;" onclick="editAdminMessage('${msg.id}', '${safeText}')">Düzenle</button>
                     <button class="btn-danger" style="padding:3px 6px; font-size:10px; border-radius:4px;" onclick="deleteAdminMessage('${msg.id}')">Sil</button>
                 </div>
             `;
@@ -519,20 +521,24 @@
     }
 
     async function deleteAdminMessage(id) {
-        if (confirm("Bu duyuruyu silmek istediğinize emin misiniz?")) {
-            const { error } = await supabaseClient.from('messages').delete().eq('id', id);
-            if (error) alert("Silme hatası: " + error.message);
-            else fetchMessages();
-        }
+        setTimeout(async () => {
+            if (window.confirm("Bu duyuruyu silmek istediğinize emin misiniz?")) {
+                const { error } = await supabaseClient.from('messages').delete().eq('id', id);
+                if (error) alert("Silme hatası: " + error.message);
+                else fetchMessages();
+            }
+        }, 50);
     }
 
     async function editAdminMessage(id, oldText) {
-        const newText = prompt("Duyuruyu düzenleyin:", oldText);
-        if (newText !== null && newText.trim() !== "") {
-            const { error } = await supabaseClient.from('messages').update({ text: newText.trim() }).eq('id', id);
-            if (error) alert("Güncelleme hatası: " + error.message);
-            else fetchMessages();
-        }
+        setTimeout(async () => {
+            const newText = prompt("Duyuruyu düzenleyin:", oldText);
+            if (newText !== null && newText.trim() !== "") {
+                const { error } = await supabaseClient.from('messages').update({ text: newText.trim() }).eq('id', id);
+                if (error) alert("Güncelleme hatası: " + error.message);
+                else fetchMessages();
+            }
+        }, 50);
     }
 
     async function sendBroadcastMessage() {
@@ -719,7 +725,10 @@
     }
 
     async function triggerAction(actionName, durationMinutes = 0) {
-        if (!currentUser || !currentBranch) return;
+        if (!currentUser || !currentBranch) {
+            alert("Lütfen önce şube seçip personel girişi yapın!");
+            return;
+        }
         const now = new Date();
         const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         const dateStr = now.toISOString().split('T')[0];
