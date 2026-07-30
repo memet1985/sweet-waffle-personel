@@ -1,5 +1,5 @@
 self.addEventListener('push', function(event) {
-  let data = { title: "Sweet Waffle", body: "Yeni bir mesajınız var!" };
+  let data = { title: "Sweet Waffle Duyuru", body: "Yeni bir mesajınız var!" };
   
   if (event.data) {
     try {
