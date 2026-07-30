@@ -142,7 +142,7 @@
         .hidden { display: none !important; }
         .card { background: #fffaf5; padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 2px solid var(--border-warm); box-sizing: border-box; }
         .msg-box { background: linear-gradient(135deg, #fff3cd, #ffe8a1); color: #856404; padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 12px; border: 1px solid #ffeeba; font-weight: 500; text-align: left; }
-        .toast { position: fixed; bottom: 20px; left: 50%<b>; transform: translateX(-50%); background: #2c3e50; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 9999; transition: opacity 0.3s; }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2c3e50; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 9999; transition: opacity 0.3s; pointer-events: none; }
         .stats { display: flex; gap: 8px; margin-bottom: 10px; }
         .stat-box { background: linear-gradient(135deg, #fef6ec, #faebd7); padding: 8px; border-radius: 10px; flex: 1; text-align: center; font-size: 11px; color: var(--waffle-main); border: 2px solid var(--waffle-gold); font-weight: 600; }
         .log-list { font-size: 11px; max-height: 90px; overflow-y: auto; padding-left: 10px; margin: 0; color: #555; text-align: left; }
@@ -389,20 +389,26 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+        registerServiceWorker();
         setupRealtimeSubscriptions();
         fetchAllData();
         buildAdminShiftTableTemplate();
-        registerServiceWorker();
 
         document.addEventListener("visibilitychange", () => {
             if (!document.hidden) { fetchAllData(); checkAndRestoreTimer(); }
         });
         checkAndRestoreTimer();
+        setInterval(fetchAllData, 15000); // Arka plan bağlantısı canlı kalsın diye periyodik senkronizasyon
     });
 
     function registerServiceWorker() {
-        if ('serviceWorker' in navigator && 'Notification' in window) {
-            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                console.log('Service Worker aktif:', reg);
+                if ('Notification' in window && Notification.permission !== 'granted') {
+                    Notification.requestPermission();
+                }
+            }).catch(err => console.log('Service Worker kayıt hatası:', err));
         }
     }
 
@@ -417,7 +423,9 @@
             .channel('public-db-changes')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => {
                 fetchMessages();
-                if (payload.eventType === 'INSERT') showBrowserNotification("Sweet Waffle - Yeni Duyuru", payload.new.text);
+                if (payload.eventType === 'INSERT') {
+                    showBrowserNotification("Sweet Waffle - Yeni Duyuru", payload.new.text);
+                }
             })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'logs' }, () => fetchLogs())
             .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, () => fetchSchedules())
