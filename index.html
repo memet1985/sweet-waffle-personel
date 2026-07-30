@@ -280,7 +280,7 @@
                         <div style="font-size: 10px; margin-bottom: 2px; font-weight: 700; color: var(--waffle-dark);" id="dossier-summary-text"></div>
                         <div style="max-height: 75px; overflow-y: auto;">
                             <table>
-                               <thead><tr><th>Şube</th><th>İşlem</th><th>Tarih/Saat</th></tr></thead>
+                               <thead><tr><th>Şube</th><th>İşlem</th><th>Zaman</th></tr></thead>
                                <tbody id="dossier-logs-table"><tr><td colspan="3">Veri yok</td></tr></tbody>
                             </table>
                         </div>
@@ -341,8 +341,8 @@
                     </div>
                     <div style="max-height: 110px; overflow-y: auto;">
                         <table>
-                            <thead><tr><th>Şube</th><th>Personel</th><th>İşlem</th><th>Saat</th><th>Tarih</th></tr></thead>
-                            <tbody id="admin-log-table"><tr><td colspan="5">Kayıt bulunmuyor.</td></tr></tbody>
+                            <thead><tr><th>Şube</th><th>Personel</th><th>İşlem</th><th>Zaman</th></tr></thead>
+                            <tbody id="admin-log-table"><tr><td colspan="4">Kayıt bulunmuyor.</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -447,7 +447,7 @@
     }
 
     async function fetchLogs() {
-        const { data, error } = await supabaseClient.from('logs').select('*').order('created_at', { ascending: false });
+        const { data, error } = await supabaseClient.from('logs').select('*');
         if (!error && data) {
             window.globalLogsCache = data;
             updateStaffFilterOptions();
@@ -730,10 +730,9 @@
             return;
         }
         const now = new Date();
-        const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const dateStr = now.toISOString().split('T')[0];
+        const timeStr = now.toLocaleDateString('tr-TR') + ' ' + now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-        const { error } = await supabaseClient.from('logs').insert([{ branch: currentBranch, staff_name: currentUser, action: actionName, time: timeStr, date: dateStr }]);
+        const { error } = await supabaseClient.from('logs').insert([{ branch: currentBranch, staff_name: currentUser, action: actionName, time: timeStr }]);
         if (error) {
             alert("Kayıt eklenirken hata oluştu: " + error.message);
             return;
@@ -781,10 +780,10 @@
     }
 
     function renderUserTodayLogs() {
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStr = new Date().toLocaleDateString('tr-TR');
         const ul = document.getElementById("today-logs");
         ul.innerHTML = "";
-        const userLogs = window.globalLogsCache.filter(item => item.staff_name === currentUser && item.date === todayStr);
+        const userLogs = window.globalLogsCache.filter(item => item.staff_name === currentUser && item.time && item.time.startsWith(todayStr));
         if (userLogs.length === 0) { ul.innerHTML = "<li>Bugün kayıt yok.</li>"; return; }
         userLogs.forEach(log => { ul.innerHTML += `<li><strong>${log.time}</strong> - ${log.action}</li>`; });
     }
@@ -872,11 +871,11 @@
             return matchBranch && matchStaff;
         });
 
-        if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Kayıt yok.</td></tr>'; return; }
+        if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Kayıt yok.</td></tr>'; return; }
         
         tbody.innerHTML = "";
         filtered.forEach(log => {
-            tbody.innerHTML += `<tr><td>${log.branch || '-'}</td><td><b>${log.staff_name || '-'}</b></td><td>${log.action || '-'}</td><td>${log.time || '-'}</td><td>${log.date || '-'}</td></tr>`;
+            tbody.innerHTML += `<tr><td>${log.branch || '-'}</td><td><b>${log.staff_name || '-'}</b></td><td>${log.action || '-'}</td><td>${log.time || '-'}</td></tr>`;
         });
     }
 
@@ -889,7 +888,7 @@
         document.getElementById("dossier-summary-text").innerText = `${name} toplam ${logs.length} işlem yaptı.`;
         let tbody = document.getElementById("dossier-logs-table");
         tbody.innerHTML = "";
-        logs.forEach(l => { tbody.innerHTML += `<tr><td>${l.branch || '-'}</td><td>${l.action || '-'}</td><td>${l.date || '-'} ${l.time || '-'}</td></tr>`; });
+        logs.forEach(l => { tbody.innerHTML += `<tr><td>${l.branch || '-'}</td><td>${l.action || '-'}</td><td>${l.time || '-'}</td></tr>`; });
     }
 
     function exportToExcel() {
@@ -905,7 +904,7 @@
         doc.text("Sweet Waffle Raporu", 14, 15);
         let y = 25;
         window.globalLogsCache.slice(0, 25).forEach((log, i) => {
-            doc.text(`${i+1}. ${log.staff_name || '-'} - ${log.branch || '-'} - ${log.action || '-'} (${log.date || '-'} ${log.time || '-'})`, 14, y);
+            doc.text(`${i+1}. ${log.staff_name || '-'} - ${log.branch || '-'} - ${log.action || '-'} (${log.time || '-'})`, 14, y);
             y += 8;
         });
         doc.save("SweetWaffle_Rapor.pdf");
