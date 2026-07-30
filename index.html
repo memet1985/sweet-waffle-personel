@@ -732,7 +732,14 @@
         const now = new Date();
         const timeStr = now.toLocaleDateString('tr-TR') + ' ' + now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-        const { error } = await supabaseClient.from('logs').insert([{ branch: currentBranch, name: currentUser, action: actionName, time: timeStr }]);
+        const { error } = await supabaseClient.from('logs').insert([{ 
+            branch: currentBranch, 
+            name: currentUser, 
+            staff_name: currentUser, 
+            action: actionName, 
+            time: timeStr 
+        }]);
+        
         if (error) {
             alert("Kayıt eklenirken hata oluştu: " + error.message);
             return;
