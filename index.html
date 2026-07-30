@@ -379,7 +379,7 @@
         setupRealtimeSubscriptions();
         fetchAllData();
         buildAdminShiftTableTemplate();
-        requestNotificationPermission();
+        registerServiceWorker();
 
         document.addEventListener("visibilitychange", () => {
             if (!document.hidden) { fetchAllData(); checkAndRestoreTimer(); }
@@ -387,9 +387,19 @@
         checkAndRestoreTimer();
     });
 
-    function requestNotificationPermission() {
-        if ("Notification" in window && Notification.permission !== "granted") {
-            Notification.requestPermission();
+    function registerServiceWorker() {
+        if ('serviceWorker' in navigator && 'Notification' in window) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(function(registration) {
+                    Notification.requestPermission().then(function(permission) {
+                        if (permission === 'granted') {
+                            console.log('Kilit ekranı bildirim izni onaylandı.');
+                        }
+                    });
+                })
+                .catch(function(error) {
+                    console.log('Servis kaydı başarısız:', error);
+                });
         }
     }
 
@@ -412,8 +422,17 @@
     }
 
     function showBrowserNotification(title, body) {
-        if ("Notification" in window && Notification.permission === "granted") {
-            new Notification(title, { body: body, icon: "logo.webp" });
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification(title, {
+                    body: body,
+                    icon: 'logo.webp',
+                    badge: 'logo.webp',
+                    vibrate: [200, 100, 200],
+                    tag: 'sweet-waffle-notification',
+                    renotify: true
+                });
+            });
         }
     }
 
@@ -702,10 +721,14 @@
     async function triggerAction(actionName, durationMinutes = 0) {
         if (!currentUser || !currentBranch) return;
         const now = new Date();
-        const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+        const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         const dateStr = now.toISOString().split('T')[0];
 
-        await supabaseClient.from('logs').insert([{ branch: currentBranch, staff_name: currentUser, action: actionName, time: timeStr, date: dateStr }]);
+        const { error } = await supabaseClient.from('logs').insert([{ branch: currentBranch, staff_name: currentUser, action: actionName, time: timeStr, date: dateStr }]);
+        if (error) {
+            alert("Kayıt eklenirken hata oluştu: " + error.message);
+            return;
+        }
         alert(actionName + " kaydedildi.");
 
         if (durationMinutes > 0) startCountdown(durationMinutes * 60);
@@ -834,12 +857,17 @@
         const sf = document.getElementById("staff-filter").value;
         if (!tbody) return;
 
-        let filtered = window.globalLogsCache.filter(item => (bf === "Tümü" || item.branch === bf) && (sf === "Tümü" || item.staff_name === sf));
+        let filtered = window.globalLogsCache.filter(item => {
+            let matchBranch = (bf === "Tümü" || item.branch === bf);
+            let matchStaff = (sf === "Tümü" || item.staff_name === sf);
+            return matchBranch && matchStaff;
+        });
+
         if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Kayıt yok.</td></tr>'; return; }
         
         tbody.innerHTML = "";
         filtered.forEach(log => {
-            tbody.innerHTML += `<tr><td>${log.branch}</td><td><b>${log.staff_name}</b></td><td>${log.action}</td><td>${log.time}</td><td>${log.date}</td></tr>`;
+            tbody.innerHTML += `<tr><td>${log.branch || '-'}</td><td><b>${log.staff_name || '-'}</b></td><td>${log.action || '-'}</td><td>${log.time || '-'}</td><td>${log.date || '-'}</td></tr>`;
         });
     }
 
@@ -852,7 +880,7 @@
         document.getElementById("dossier-summary-text").innerText = `${name} toplam ${logs.length} işlem yaptı.`;
         let tbody = document.getElementById("dossier-logs-table");
         tbody.innerHTML = "";
-        logs.forEach(l => { tbody.innerHTML += `<tr><td>${l.branch}</td><td>${l.action}</td><td>${l.date} ${l.time}</td></tr>`; });
+        logs.forEach(l => { tbody.innerHTML += `<tr><td>${l.branch || '-'}</td><td>${l.action || '-'}</td><td>${l.date || '-'} ${l.time || '-'}</td></tr>`; });
     }
 
     function exportToExcel() {
@@ -868,7 +896,7 @@
         doc.text("Sweet Waffle Raporu", 14, 15);
         let y = 25;
         window.globalLogsCache.slice(0, 25).forEach((log, i) => {
-            doc.text(`${i+1}. ${log.staff_name} - ${log.branch} - ${log.action} (${log.date} ${log.time})`, 14, y);
+            doc.text(`${i+1}. ${log.staff_name || '-'} - ${log.branch || '-'} - ${log.action || '-'} (${log.date || '-'} ${log.time || '-'})`, 14, y);
             y += 8;
         });
         doc.save("SweetWaffle_Rapor.pdf");
