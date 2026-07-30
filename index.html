@@ -1069,6 +1069,24 @@
         });
         doc.save("SweetWaffle_Rapor.pdf");
     }
+
+  // Telefon kilit ekranı ve arka plan bildirim altyapısını başlatma
+  if ('serviceWorker' in navigator && 'Notification' in window) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(function(registration) {
+        console.log('Sweet Waffle Arka Plan Servisi Aktif');
+        
+        // Kullanıcıdan kilit ekranı bildirimi için izin isteyelim
+        Notification.requestPermission().then(function(permission) {
+          if (permission === 'granted') {
+            console.log('Kilit ekranı bildirim izni onaylandı.');
+          }
+        });
+      })
+      .catch(function(error) {
+        console.log('Servis kaydı başarısız:', error);
+      });
+  }
 </script>
 </body>
 </html>
