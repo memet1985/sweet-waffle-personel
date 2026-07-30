@@ -180,7 +180,7 @@
     <div id="admin-login-screen" class="hidden">
         <h3>🏢 Merkez Yönetim Girişi</h3>
         <label><strong>Yönetici Şifresi:</strong></label>
-        <input type="password" id="admin-password" placeholder="Şifrenizi girin (Örn: memalt2026)">
+        <input type="password" id="admin-password" placeholder="Şifrenizi girin">
         <button class="btn" onclick="verifyAdminLogin()">Panele Giriş Yap</button>
         <button class="btn btn-back" onclick="goBackToMain()">← Ana Menüye Dön</button>
     </div>
@@ -191,7 +191,7 @@
         <label><strong>Personel Seçin:</strong></label>
         <select id="staff-select"><option value="">Personel Seçiniz...</option></select>
         <label><strong>Şifre:</strong></label>
-        <input type="password" id="staff-password" placeholder="Şifreniz (Örn: 1234)">
+        <input type="password" id="staff-password" placeholder="Şifreniz">
         <button class="btn" onclick="login()">Sisteme Giriş Yap</button>
         <button class="btn btn-back" onclick="goBackToMain()">← Ana Menüye Dön</button>
     </div>
@@ -375,21 +375,19 @@
     const database = {
         "Kurtköy": { 
             staff: [
-                { name: "Nesrin POLAT", pass: "1234" }, 
-                { name: "Mehmet Demir", pass: "1234" }
+                { name: "Nesrin", pass: "4821" }, 
+                { name: "Bengi", pass: "5932" },
+                { name: "Ayten", pass: "6143" },
+                { name: "Ezgi", pass: "7254" }
             ], 
             lat: 40.916286, lng: 29.303978, plusCode: "W883+CH" 
         },
         "Soğanlık": { 
             staff: [
-                { name: "MEDİNE", pass: "1001" },
-                { name: "MALİVAN", pass: "1002" },
-                { name: "DİLDAN", pass: "1003" },
-                { name: "ZEYNEP", pass: "1004" },
-                { name: "BÜŞRA", pass: "1005" },
-                { name: "YASEMİN", pass: "1006" },
-                { name: "CAN", pass: "1007" },
-                { name: "DURDANE", pass: "1008" }
+                { name: "Ece", pass: "8365" },
+                { name: "Esra", pass: "9476" },
+                { name: "Rabia", pass: "1587" },
+                { name: "Hilal", pass: "2698" }
             ], 
             lat: 40.914869, lng: 29.203213, plusCode: "W673+W7" 
         },
@@ -1278,7 +1276,7 @@
         const doc = new jsPDF();
         doc.text("Sweet Waffle - Personel Hareket Raporu", 14, 15);
         
-        let y = 25;
+        y = 25;
         doc.setFontSize(10);
         window.globalLogsCache.slice(0, 30).forEach((l, i) => {
             let line = `${i+1}. ${l.branch || ''} - ${l.staff_name} - ${l.action} (${new Date(l.created_at).toLocaleString('tr-TR')})`;
