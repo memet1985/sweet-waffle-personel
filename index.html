@@ -180,7 +180,7 @@
     <div id="admin-login-screen" class="hidden">
         <h3>🏢 Merkez Yönetim Girişi</h3>
         <label><strong>Yönetici Şifresi:</strong></label>
-        <input type="password" id="admin-password" placeholder="Şifrenizi girin (Örn: 5678)">
+        <input type="password" id="admin-password" placeholder="Şifrenizi girin (Örn: memalt2026)">
         <button class="btn" onclick="verifyAdminLogin()">Panele Giriş Yap</button>
         <button class="btn btn-back" onclick="goBackToMain()">← Ana Menüye Dön</button>
     </div>
@@ -247,7 +247,7 @@
     <!-- 3.B. QR KAMERA TARAYICI EKRANI -->
     <div id="qr-scanner-screen" class="hidden">
         <h3>📷 Şube QR Kod Tarayıcı</h3>
-        <p style="text-align: center; font-size: 11px; color: #666;">Lütfen şubenin QR kodunu kameraya okutun.</p>
+        <p style="text-align: center; font-size: 11px; color: #666;">Lütfen şubenin QR kodunu kameraya okutun (Aynı kodu 2. kez okutmanız ÇIKIŞ olarak işlenir).</p>
         <div id="reader"></div>
         <button class="btn btn-back" onclick="closeQrScanner()">Kamerayı Kapat</button>
     </div>
@@ -402,7 +402,7 @@
         }
     };
 
-    const ADMIN_PASS = "5678";
+    const ADMIN_PASS = "memalt2026";
     const DAYS_OF_WEEK = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
 
     let currentUser = null;
