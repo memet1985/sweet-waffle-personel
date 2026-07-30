@@ -217,7 +217,7 @@
             </div>
         </div>
 
-        <button class="btn btn-qr-scan" onclick="openQrScannerDirectly()">📍📷 QR Kod Okut ve İşe Başla</button>
+        <button class="btn btn-qr-scan" onclick="openQrScannerDirectly()">📍📷 QR Kod Okut (Giriş / Çıkış)</button>
 
         <div class="card" style="padding: 10px; text-align: left;">
             <strong style="font-size: 11px; color: var(--waffle-dark); display: block; margin-bottom: 6px; text-transform: uppercase;">⏱️ Hızlı Çalışma İşlemleri</strong>
@@ -373,9 +373,33 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const database = {
-        "Kurtköy": { staff: [{ name: "Nesrin POLAT", pass: "1234" }, { name: "Mehmet Demir", pass: "1234" }], lat: 40.916286, lng: 29.303978, plusCode: "W883+CH" },
-        "Soğanlık": { staff: [{ name: "Can Çelik", pass: "1234" }, { name: "Elif Demir", pass: "1234" }], lat: 40.914869, lng: 29.203213, plusCode: "W673+W7" },
-        "Yeni": { staff: [{ name: "Burak Şahin", pass: "1234" }, { name: "Zeynep Koç", pass: "1234" }], lat: 41.00820, lng: 28.97840, plusCode: "F4V3+3G" }
+        "Kurtköy": { 
+            staff: [
+                { name: "Nesrin POLAT", pass: "1234" }, 
+                { name: "Mehmet Demir", pass: "1234" }
+            ], 
+            lat: 40.916286, lng: 29.303978, plusCode: "W883+CH" 
+        },
+        "Soğanlık": { 
+            staff: [
+                { name: "MEDİNE", pass: "1001" },
+                { name: "MALİVAN", pass: "1002" },
+                { name: "DİLDAN", pass: "1003" },
+                { name: "ZEYNEP", pass: "1004" },
+                { name: "BÜŞRA", pass: "1005" },
+                { name: "YASEMİN", pass: "1006" },
+                { name: "CAN", pass: "1007" },
+                { name: "DURDANE", pass: "1008" }
+            ], 
+            lat: 40.914869, lng: 29.203213, plusCode: "W673+W7" 
+        },
+        "Yeni": { 
+            staff: [
+                { name: "Burak Şahin", pass: "1234" }, 
+                { name: "Zeynep Koç", pass: "1234" }
+            ], 
+            lat: 41.00820, lng: 28.97840, plusCode: "F4V3+3G" 
+        }
     };
 
     const ADMIN_PASS = "5678";
@@ -877,8 +901,20 @@
                 let distance = calculateDistance(userLat, userLng, scannedLat, scannedLng);
 
                 if (distance <= 0.3) { // 300 metre tolerans
-                    await triggerAction('İşe Giriş', 0);
-                    showToast(`📍 ${scannedBranch} QR kodu doğrulandı ve İşe Giriş kaydedildi!`);
+                    // Otomatik Giriş/Çıkış Kontrolü (Bugün son hareket nedir?)
+                    let todayStr = new Date().toISOString().split('T')[0];
+                    let userLogs = window.globalLogsCache.filter(l => l.staff_name === currentUser && l.created_at && l.created_at.startsWith(todayStr));
+                    userLogs.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+
+                    let lastAction = userLogs.length > 0 ? userLogs[userLogs.length - 1].action : null;
+                    let targetAction = 'İşe Giriş';
+
+                    if (lastAction === 'İşe Giriş' || lastAction === 'Yemek Molası Dönüş' || lastAction === 'Normal Mola Dönüş') {
+                        targetAction = 'İşten Çıkış';
+                    }
+
+                    await triggerAction(targetAction, 0);
+                    showToast(`📍 ${scannedBranch} QR kodu doğrulandı: ${targetAction} kaydedildi!`);
                 } else {
                     showToast(`❌ Konum uyuşmazlığı! Şubeden çok uzaktasınız (~${Math.round(distance*1000)}m).`);
                 }
