@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sweet Waffle - Merkez Yönetim Paneli</title>
+    <title>Sweet Waffle - Yönetim Paneli</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h3, h4 { color: #333; }
-        .panel-section { margin-bottom: 30px; }
         .message-form input, .message-form textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .message-form textarea { height: 80px; resize: vertical; }
-        .btn-primary { background: #5cb85c; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; }
-        .btn-primary:hover { background: #4cae4c; }
+        .btn-primary { background: #5cb85c; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; margin-bottom: 20px; }
         .msg-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; margin-bottom: 5px; background: #fafafa; border-radius: 4px; }
         .btn-edit { background: #f0ad4e; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; margin-right: 5px; }
         .btn-delete { background: #d9534f; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
@@ -24,35 +21,29 @@
 <body>
 
 <div class="container">
-    <!-- MERKEZ YÖNETİM PANELİ - MESAJ VE DUYURU YÖNETİMİ -->
-    <div class="panel-section">
-        <h3>Sweet Waffle - Merkez Duyuru ve Mesaj Yönetimi</h3>
-        
-        <!-- Yeni Mesaj Gönderme Formu -->
-        <div class="message-form">
-            <input type="text" id="msgTitle" placeholder="Bildirim Başlığı" value="Sweet Waffle Duyuru">
-            <textarea id="msgBody" placeholder="Gönderilecek mesajı buraya yazın..."></textarea>
-            <button onclick="sendPushNotificationToAll()" class="btn-primary">Tüm Cihazlara Kilit Ekranı Bildirimi Gönder</button>
-        </div>
-
-        <!-- Gönderilmiş Mesajlar Listesi (Sil / Düzenle Özellikli) -->
-        <div class="messages-list-container" style="margin-top: 20px;">
-            <h4>Geçmiş Mesajlar ve Duyurular</h4>
-            <div id="adminMessagesList">
-                <!-- Dinamik olarak buraya yüklenecek -->
-            </div>
-        </div>
-
-        <!-- Rapor İndirme Butonu -->
-        <button onclick="exportToPDF()" class="btn-pdf">Calışma Raporunu PDF İndir</button>
+    <h3>Sweet Waffle - Merkez Duyuru ve Mesaj Yönetimi</h3>
+    
+    <!-- Yeni Mesaj Gönderme Formu -->
+    <div class="message-form">
+        <input type="text" id="msgTitle" placeholder="Bildirim Başlığı" value="Sweet Waffle Duyuru">
+        <textarea id="msgBody" placeholder="Gönderilecek mesajı buraya yazın..."></textarea>
+        <button onclick="sendPushNotificationToAll()" class="btn-primary">Tüm Cihazlara Kilit Ekranı Bildirimi Gönder</button>
     </div>
+
+    <!-- Gönderilmiş Mesajlar Listesi (Sil / Düzenle Özellikli) -->
+    <h4>Geçmiş Mesajlar ve Duyurular</h4>
+    <div id="adminMessagesList">
+        <!-- Dinamik olarak buraya yüklenecek -->
+    </div>
+
+    <!-- Rapor İndirme Butonu -->
+    <button onclick="exportToPDF()" class="btn-pdf">Calışma Raporunu PDF İndir</button>
 </div>
 
 <script>
     // Global Log Önbelleği (PDF için)
     window.globalLogsCache = [
-        { staff_name: "Ahmet Yılmaz", branch: "Merkez", action: "Giriş Yaptı", date: "2026-07-30", time: "09:00" },
-        { staff_name: "Ayşe Demir", branch: "Şube 2", action: "Stok Güncelledi", date: "2026-07-30", time: "09:30" }
+        { staff_name: "Merkez Kullanıcı", branch: "Merkez", action: "Sistem Kontrolü", date: "2026-07-30", time: "21:00" }
     ];
 
     // Merkez Panel Mesaj Yönetimi Verileri
@@ -137,7 +128,6 @@
         }
     }
 
-    // PDF Dışa Aktarma Fonksiyonu
     function exportToPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
