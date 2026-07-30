@@ -732,7 +732,7 @@
         const now = new Date();
         const timeStr = now.toLocaleDateString('tr-TR') + ' ' + now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-        const { error } = await supabaseClient.from('logs').insert([{ branch: currentBranch, staff_name: currentUser, action: actionName, time: timeStr }]);
+        const { error } = await supabaseClient.from('logs').insert([{ branch: currentBranch, name: currentUser, action: actionName, time: timeStr }]);
         if (error) {
             alert("Kayıt eklenirken hata oluştu: " + error.message);
             return;
@@ -783,7 +783,7 @@
         const todayStr = new Date().toLocaleDateString('tr-TR');
         const ul = document.getElementById("today-logs");
         ul.innerHTML = "";
-        const userLogs = window.globalLogsCache.filter(item => item.staff_name === currentUser && item.time && item.time.startsWith(todayStr));
+        const userLogs = window.globalLogsCache.filter(item => (item.name === currentUser || item.staff_name === currentUser) && item.time && item.time.startsWith(todayStr));
         if (userLogs.length === 0) { ul.innerHTML = "<li>Bugün kayıt yok.</li>"; return; }
         userLogs.forEach(log => { ul.innerHTML += `<li><strong>${log.time}</strong> - ${log.action}</li>`; });
     }
@@ -842,7 +842,7 @@
         if (!sf) return;
         let cur = sf.value;
         sf.innerHTML = '<option value="Tümü">Tüm Personeller</option>';
-        [...new Set(window.globalLogsCache.map(i => i.staff_name))].forEach(name => {
+        [...new Set(window.globalLogsCache.map(i => i.name || i.staff_name))].forEach(name => {
             if (name) sf.innerHTML += `<option value="${name}">${name}</option>`;
         });
         sf.value = cur;
@@ -866,8 +866,9 @@
         if (!tbody) return;
 
         let filtered = window.globalLogsCache.filter(item => {
+            let itemName = item.name || item.staff_name;
             let matchBranch = (bf === "Tümü" || item.branch === bf);
-            let matchStaff = (sf === "Tümü" || item.staff_name === sf);
+            let matchStaff = (sf === "Tümü" || itemName === sf);
             return matchBranch && matchStaff;
         });
 
@@ -875,7 +876,8 @@
         
         tbody.innerHTML = "";
         filtered.forEach(log => {
-            tbody.innerHTML += `<tr><td>${log.branch || '-'}</td><td><b>${log.staff_name || '-'}</b></td><td>${log.action || '-'}</td><td>${log.time || '-'}</td></tr>`;
+            let sName = log.name || log.staff_name || '-';
+            tbody.innerHTML += `<tr><td>${log.branch || '-'}</td><td><b>${sName}</b></td><td>${log.action || '-'}</td><td>${log.time || '-'}</td></tr>`;
         });
     }
 
@@ -884,7 +886,7 @@
         const area = document.getElementById("dossier-result-area");
         if (!name) { area.classList.add("hidden"); return; }
         area.classList.remove("hidden");
-        let logs = window.globalLogsCache.filter(i => i.staff_name === name);
+        let logs = window.globalLogsCache.filter(i => (i.name || i.staff_name) === name);
         document.getElementById("dossier-summary-text").innerText = `${name} toplam ${logs.length} işlem yaptı.`;
         let tbody = document.getElementById("dossier-logs-table");
         tbody.innerHTML = "";
@@ -904,7 +906,8 @@
         doc.text("Sweet Waffle Raporu", 14, 15);
         let y = 25;
         window.globalLogsCache.slice(0, 25).forEach((log, i) => {
-            doc.text(`${i+1}. ${log.staff_name || '-'} - ${log.branch || '-'} - ${log.action || '-'} (${log.time || '-'})`, 14, y);
+            let sName = log.name || log.staff_name || '-';
+            doc.text(`${i+1}. ${sName} - ${log.branch || '-'} - ${log.action || '-'} (${log.time || '-'})`, 14, y);
             y += 8;
         });
         doc.save("SweetWaffle_Rapor.pdf");
