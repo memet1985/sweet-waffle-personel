@@ -262,6 +262,17 @@
             </div>
         </div>
 
+        <!-- MERKEZ CANLI MOLA / YEMEK TAKİP ALANI -->
+        <div class="card" style="background: #fff9f0; border: 2px solid var(--waffle-gold); text-align: left; margin-bottom: 12px;">
+            <strong style="font-size: 12px; color: var(--waffle-dark); display: block; margin-bottom: 6px;">☕🍽️ Şu Anda Molada / Yemekte Olan Personeller (Canlı Sayaç)</strong>
+            <div style="max-height: 120px; overflow-y: auto;">
+                <table>
+                    <thead><tr><th>Şube</th><th>Personel</th><th>Mola Türü</th><th>Kalan Süre (Canlı)</th></tr></thead>
+                    <tbody id="admin-active-breaks-tbody"><tr><td colspan="4">Şu an molada/yemekte olan personel bulunmuyor.</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- ŞUBE QR KODLARI YÖNETİM ALANI -->
         <div class="card" style="background: #fffdf9; border: 2px solid var(--waffle-gold); text-align: left;">
             <strong style="font-size: 11px; color: var(--waffle-dark); display: block; margin-bottom: 4px;">🖼️ Şube Konum Bazlı QR Kodlar (JPG İndir)</strong>
@@ -373,6 +384,7 @@
     let currentUser = null;
     let currentBranch = null;
     let countdownInterval = null;
+    let adminActiveBreaksInterval = null;
     let html5QrCode = null;
     window.globalLogsCache = [];
     window.globalSchedulesCache = {};
@@ -398,7 +410,7 @@
             if (!document.hidden) { fetchAllData(); checkAndRestoreTimer(); }
         });
         checkAndRestoreTimer();
-        setInterval(fetchAllData, 15000); // Arka plan bağlantısı canlı kalsın diye periyodik senkronizasyon
+        setInterval(fetchAllData, 15000);
     });
 
     function registerServiceWorker() {
@@ -466,6 +478,7 @@
             if(!document.getElementById("admin-screen").classList.contains("hidden")) {
                 updateAdminTable();
                 renderAdminStaffDossier();
+                renderAdminActiveBreaks();
             }
             if(currentUser) updateUserPanelUI();
         }
@@ -692,6 +705,7 @@
             document.getElementById("main-container-box").classList.add("container-admin");
             document.getElementById("admin-password").value = "";
             updateAdminTable();
+            startAdminActiveBreaksTicker();
         } else { showToast("Yönetici şifresi hatalı!"); }
     }
 
@@ -728,6 +742,7 @@
         document.getElementById("global-announcement-wrapper").classList.remove("hidden");
         document.getElementById("main-container-box").classList.remove("container-admin");
         stopCountdown();
+        stopAdminActiveBreaksTicker();
     }
 
     async function triggerAction(actionName, durationMinutes = 0) {
@@ -738,12 +753,22 @@
         const now = new Date();
         const timeStr = now.toLocaleDateString('tr-TR') + ' ' + now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
+        // Eğer mola veya yemek çıkışı ise bitiş zamanını (timestamp) da kaydedelim
+        let expiryTimestamp = 0;
+        if (durationMinutes > 0) {
+            expiryTimestamp = Date.now() + (durationMinutes * 60 * 1000);
+            localStorage.setItem("waffle_timer", expiryTimestamp);
+        } else if (actionName.includes("Dönüş") || actionName === "İşten Çıkış") {
+            localStorage.removeItem("waffle_timer");
+        }
+
         const { error } = await supabaseClient.from('logs').insert([{ 
             branch: currentBranch, 
             name: currentUser, 
             staff_name: currentUser, 
             action: actionName, 
-            time: timeStr 
+            time: timeStr,
+            expiry_time: expiryTimestamp
         }]);
         
         if (error) {
@@ -753,7 +778,7 @@
         showToast(actionName + " kaydedildi.");
 
         if (durationMinutes > 0) startCountdown(durationMinutes * 60);
-        else if (actionName.includes("Dönüş") || actionName === "İşten Çıkış") stopCountdown();
+        else stopCountdown();
         await fetchLogs();
     }
 
@@ -892,6 +917,86 @@
             let sName = log.name || log.staff_name || '-';
             tbody.innerHTML += `<tr><td>${log.branch || '-'}</td><td><b>${sName}</b></td><td>${log.action || '-'}</td><td>${log.time || '-'}</td></tr>`;
         });
+    }
+
+    // MERKEZ CANLI MOLA VE YEMEK LİSTELEME & OTOMATİK KALDIRMA MİMARİSİ
+    function renderAdminActiveBreaks() {
+        const tbody = document.getElementById("admin-active-breaks-tbody");
+        if (!tbody) return;
+
+        // Her personel için bugüne ait logları kronolojik sırala
+        const staffMap = {};
+        // Logları zaman sırasına koyalım
+        let sortedLogs = [...window.globalLogsCache].sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+
+        sortedLogs.forEach(log => {
+            let sName = log.name || log.staff_name;
+            if (!sName) return;
+            staffMap[sName] = log; // Son durum logu
+        });
+
+        let activeBreaks = [];
+        const now = Date.now();
+
+        Object.keys(staffMap).forEach(sName => {
+            let lastLog = staffMap[sName];
+            let action = lastLog.action || "";
+            // Eğer son işlem mola çıkışı veya yemek çıkışı ise aktif sayılır
+            if (action.includes("Çıkış") && (action.includes("Mola") || action.includes("Yemek"))) {
+                let expiry = lastLog.expiry_time || 0;
+                // Eğer veritabanında expiry_time yoksa eylem adına göre süre tahmini ekleyelim (Yemek: 45dk, Mola: 15dk)
+                if (!expiry && lastLog.created_at) {
+                    let createdMs = new Date(lastLog.created_at).getTime();
+                    let durationMin = action.includes("Yemek") ? 45 : 15;
+                    expiry = createdMs + (durationMin * 60 * 1000);
+                }
+
+                // Süre henüz bitmediyse aktif listesine ekle
+                if (expiry > now) {
+                    activeBreaks.push({
+                        branch: lastLog.branch || '-',
+                        name: sName,
+                        action: action,
+                        expiry: expiry
+                    });
+                }
+            }
+        });
+
+        if (activeBreaks.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4">Şu an molada/yemekte olan personel bulunmuyor.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = "";
+        activeBreaks.forEach((item, idx) => {
+            let remSec = Math.floor((item.expiry - now) / 1000);
+            let m = Math.floor(remSec / 60), s = remSec % 60;
+            let timeStr = (m < 10 ? "0"+m : m) + ":" + (s < 10 ? "0"+s : s);
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.branch}</td>
+                    <td><b>${item.name}</b></td>
+                    <td>${item.action}</td>
+                    <td><span id="admin-break-timer-${idx}" style="color: #e67e22; font-weight:800;">⏳ ${timeStr}</span></td>
+                </tr>
+            `;
+        });
+    }
+
+    function startAdminActiveBreaksTicker() {
+        if (adminActiveBreaksInterval) clearInterval(adminActiveBreaksInterval);
+        adminActiveBreaksInterval = setInterval(() => {
+            if (!document.getElementById("admin-screen").classList.contains("hidden")) {
+                renderAdminActiveBreaks();
+            }
+        }, 1000);
+    }
+
+    function stopAdminActiveBreaksTicker() {
+        if (adminActiveBreaksInterval) clearInterval(adminActiveBreaksInterval);
+        adminActiveBreaksInterval = null;
     }
 
     function renderAdminStaffDossier() {
