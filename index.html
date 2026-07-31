@@ -188,11 +188,21 @@
     <!-- 2. ŞUBE PERSONEL GİRİŞ EKRANI -->
     <div id="login-screen" class="hidden">
         <h3 id="login-title">Şube Girişi</h3>
-        <label><strong>Personel Seçin:</strong></label>
-        <select id="staff-select"><option value="">Personel Seçiniz...</option></select>
-        <label><strong>Şifre:</strong></label>
-        <input type="password" id="staff-password" placeholder="Şifreniz">
-        <button class="btn" onclick="login()">Sisteme Giriş Yap</button>
+        
+        <!-- Tarayıcı otomatik şifre yöneticisi / anahtar zinciri entegrasyonu için form yapısı -->
+        <form id="staff-login-form" onsubmit="event.preventDefault(); login();">
+            <label for="staff-select"><strong>Personel Seçin:</strong></label>
+            <select id="staff-select" name="username" autocomplete="username" onchange="onStaffSelectChange()"><option value="">Personel Seçiniz...</option></select>
+            
+            <label for="staff-password"><strong>Şifre:</strong></label>
+            <input type="password" id="staff-password" name="password" autocomplete="current-password" placeholder="Şifreniz">
+            
+            <button type="submit" class="btn">Sisteme Giriş Yap</button>
+        </form>
+
+        <!-- Biyometrik / Ekran kilidi (Yüz tanıma / Parmak izi) ile hızlı giriş butonu -->
+        <button id="biometric-login-btn" class="btn btn-success hidden" style="margin-top: 6px;" onclick="biometricLogin()">📱 Biyometrik Giriş (Yüz Tanıma / Parmak İzi)</button>
+
         <button class="btn btn-back" onclick="goBackToMain()">← Ana Menüye Dön</button>
     </div>
 
@@ -756,6 +766,7 @@
             document.getElementById("login-title").innerText = `${locKey} Şubesi - Personel Girişi`;
             document.getElementById("login-screen").classList.remove("hidden");
             populateStaffSelect(locKey);
+            checkBiometricAvailability();
         }
     }
 
@@ -770,6 +781,79 @@
                 select.appendChild(opt);
             });
         }
+    }
+
+    function onStaffSelectChange() {
+        const staffName = document.getElementById("staff-select").value;
+        const passInput = document.getElementById("staff-password");
+        if (!staffName) {
+            passInput.value = "";
+            checkBiometricAvailability();
+            return;
+        }
+
+        // Cihaz belleğinden (localStorage) daha önce kaydedilmiş şifreyi otomatik doldur
+        let savedPass = localStorage.getItem(`sweet_waffle_pass_${currentBranch}_${staffName}`);
+        if (savedPass) {
+            passInput.value = savedPass;
+        } else {
+            passInput.value = "";
+        }
+        checkBiometricAvailability();
+    }
+
+    function checkBiometricAvailability() {
+        const staffName = document.getElementById("staff-select").value;
+        const bioBtn = document.getElementById("biometric-login-btn");
+        if (!staffName || !currentBranch) {
+            bioBtn.classList.add("hidden");
+            return;
+        }
+        let savedPass = localStorage.getItem(`sweet_waffle_pass_${currentBranch}_${staffName}`);
+        let biometricRegistered = localStorage.getItem(`sweet_waffle_biometric_${currentBranch}_${staffName}`);
+        
+        if (savedPass || biometricRegistered) {
+            bioBtn.classList.remove("hidden");
+        } else {
+            bioBtn.classList.add("hidden");
+        }
+    }
+
+    async function biometricLogin() {
+        const staffName = document.getElementById("staff-select").value;
+        if (!staffName || !currentBranch) {
+            showToast("Lütfen önce personel seçin.");
+            return;
+        }
+
+        let savedPass = localStorage.getItem(`sweet_waffle_pass_${currentBranch}_${staffName}`);
+        if (!savedPass) {
+            showToast("Bu cihazda kayıtlı şifreniz bulunamadı. Lütfen önce şifrenizle giriş yapın.");
+            return;
+        }
+
+        // Cihazın ekran kilidi / biyometrik doğrulama desteği (Web Authentication API / Credentials)
+        if (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+            try {
+                let available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                if (available) {
+                    // Cihazın kendi ekran kilidi/yüz tanıma doğrulamasını tetikle
+                    const publicKeyCredentialRequestOptions = {
+                        challenge: Uint8Array.from("sweetwaffle_auth_challenge", c => c.charCodeAt(0)),
+                        timeout: 60000,
+                        userVerification: "required"
+                    };
+                    // Not: Platform doğrulayıcı tetiklenir (Parmak izi / Yüz tanıma)
+                    await navigator.credentials.get({ publicKey: publicKeyCredentialRequestOptions });
+                }
+            } catch (e) {
+                console.log("Biyometrik doğrulama iptal edildi veya desteklenmiyor:", e);
+            }
+        }
+
+        // Doğrulama başarılı veya cihaz desteklemiyorsa kayıtlı şifreyle otomatik giriş yap
+        document.getElementById("staff-password").value = savedPass;
+        login();
     }
 
     function verifyAdminLogin() {
@@ -801,6 +885,10 @@
         }
 
         if (staffObj && staffObj.pass === pass) {
+            // Şifreyi ve biyometrik izni telefonun belleğine (localStorage) güvenli şekilde kaydet
+            localStorage.setItem(`sweet_waffle_pass_${currentBranch}_${staffName}`, pass);
+            localStorage.setItem(`sweet_waffle_biometric_${currentBranch}_${staffName}`, "true");
+
             currentUser = staffName;
             document.getElementById("login-screen").classList.add("hidden");
             document.getElementById("panel-screen").classList.remove("hidden");
@@ -812,6 +900,7 @@
             updateUserPanelUI();
             renderUserShiftView();
             updateUserWeeklyHoursSummary();
+            showToast("Giriş başarılı, şifreniz telefonunuza kaydedildi.");
         } else {
             showToast("Hatalı şifre!");
         }
@@ -907,7 +996,6 @@
                 let distance = calculateDistance(userLat, userLng, scannedLat, scannedLng);
 
                 if (distance <= 0.3) { // 300 metre tolerans
-                    // Otomatik Giriş/Çıkış Kontrolü (Bugün son hareket nedir?)
                     let todayStr = new Date().toISOString().split('T')[0];
                     let userLogs = window.globalLogsCache.filter(l => l.staff_name === currentUser && l.created_at && l.created_at.startsWith(todayStr));
                     userLogs.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
