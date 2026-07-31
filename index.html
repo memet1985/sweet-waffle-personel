@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f9f6f0;
+            background-color: #fcf8f2;
             margin: 0;
             padding: 0;
             color: #333;
@@ -25,24 +25,27 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .close-btn {
-            background: #eee;
+            background: #f0f0f0;
             border: none;
             border-radius: 50%;
             width: 32px;
             height: 32px;
             font-size: 16px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .logo-area {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         .logo-area img {
-            width: 70px;
-            height: 70px;
+            width: 65px;
+            height: 65px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid #e2bc84;
@@ -50,71 +53,77 @@
         h2 {
             text-align: center;
             margin: 5px 0 15px 0;
-            font-size: 20px;
+            font-size: 18px;
             color: #2c2c2c;
+            font-family: Arial, sans-serif;
         }
+        /* Tekil bildirim alanı ve Arial yazı tipi */
         .notification-box {
             background-color: #fef3c7;
             border-left: 4px solid #f59e0b;
-            padding: 12px;
+            padding: 10px 12px;
             border-radius: 8px;
             margin-bottom: 12px;
-            font-size: 14px;
+            font-size: 13px;
+            font-family: Arial, sans-serif;
         }
         .welcome-text {
             text-align: center;
             font-weight: bold;
-            font-size: 16px;
-            margin: 15px 0 5px 0;
+            font-size: 15px;
+            margin: 10px 0 3px 0;
+            font-family: Arial, sans-serif;
         }
         .branch-info {
             text-align: center;
             font-size: 13px;
             color: #666;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
+            font-family: Arial, sans-serif;
         }
         .section-box {
             background: #fff;
             border: 1px solid #e5e7eb;
             border-radius: 10px;
             padding: 12px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .section-title {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
             margin-bottom: 8px;
             color: #4b5563;
+            font-family: Arial, sans-serif;
         }
         .qr-button {
             background-color: #10b981;
             color: white;
             border: none;
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             border-radius: 8px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             font-family: Arial, sans-serif;
         }
         .grid-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 8px;
         }
         .action-btn {
-            padding: 12px;
+            padding: 10px;
             border: none;
             border-radius: 8px;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12px;
             color: white;
             cursor: pointer;
             font-family: Arial, sans-serif;
+            text-align: center;
         }
         .btn-yemek-cikis { background-color: #3b82f6; }
         .btn-yemek-donus { background-color: #f97316; }
@@ -124,26 +133,27 @@
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 8px;
+            margin-bottom: 12px;
         }
         .stat-card {
             background: #fffbeb;
             border: 1px solid #fcd34d;
             border-radius: 8px;
-            padding: 10px;
+            padding: 8px;
             text-align: center;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
+            font-family: Arial, sans-serif;
         }
         .logout-btn {
             background-color: #4b5563;
             color: white;
             border: none;
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             border-radius: 8px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             font-family: Arial, sans-serif;
@@ -153,7 +163,7 @@
 <body>
 
 <div class="container">
-    <!-- Üst Bar -->
+    <!-- Üst Kısım -->
     <div class="header">
         <button class="close-btn" onclick="window.history.back()">✕</button>
     </div>
@@ -164,7 +174,7 @@
         <h2>Sweet Waffle</h2>
     </div>
 
-    <!-- Tekil Bildirim Alanı (Arial) -->
+    <!-- Tekil Bildirim Kutusu (Arial Yazı Karakteri ile) -->
     <div class="notification-box">
         📢 <strong>Merkezden Bildirim Var:</strong> Merhabalar
     </div>
@@ -175,15 +185,15 @@
     <!-- Haftalık Çalışma Programı -->
     <div class="section-box">
         <div class="section-title">📅 HAFTALIK ÇALIŞMA & İZİN PROGRAMIM</div>
-        <div style="font-size: 13px; text-align: center; color: #777; padding: 5px;">Merkez henüz program tanımlamadı.</div>
+        <div style="font-size: 12px; text-align: center; color: #777; padding: 4px; font-family: Arial, sans-serif;">Merkez henüz program tanımlamadı.</div>
     </div>
 
-    <!-- QR Kod Okutma (Giriş/Çıkış Artık Buradan Yönetiliyor) -->
-    <button class="qr-button" onclick="qrGirisCikisYap()">
+    <!-- QR Kod Okut (Giriş / Çıkış İşlemlerini Artık Bu Yönetiyor) -->
+    <button class="qr-button" onclick="qrGirisCikisIslemi()">
         📍 📷 QR Kod Okut (Giriş / Çıkış)
     </button>
 
-    <!-- Hızlı Çalışma İşlemleri (İşe Giriş / Çıkış kaldırıldı) -->
+    <!-- Hızlı Çalışma İşlemleri (İşe Giriş ve İşten Çıkış Butonları Kaldırıldı) -->
     <div class="section-box">
         <div class="section-title">⏱️ HIZLI ÇALIŞMA İŞLEMLERİ</div>
         <div class="grid-buttons">
@@ -196,14 +206,14 @@
 
     <!-- Çalışma İstatistikleri -->
     <div class="stats-grid">
-        <div class="stat-card">Haftalık Çalışma<br><span style="font-size:12px; color:#555;">0s 0d</span></div>
-        <div class="stat-card">Aylık Çalışma<br><span style="font-size:12px; color:#555;">0s 0d</span></div>
+        <div class="stat-card">Haftalık Çalışma<br><span style="font-size:11px; color:#555; font-weight:normal;">0s 0d</span></div>
+        <div class="stat-card">Aylık Çalışma<br><span style="font-size:11px; color:#555; font-weight:normal;">0s 0d</span></div>
     </div>
 
     <!-- Günlük Hareketler -->
     <div class="section-box">
         <div class="section-title">📋 GÜNLÜK HAREKETLERİM</div>
-        <div style="font-size: 13px; color: #777; padding: 5px;">Kayıt bulunmuyor.</div>
+        <div style="font-size: 12px; color: #777; padding: 4px; font-family: Arial, sans-serif;">Kayıt bulunmuyor.</div>
     </div>
 
     <!-- Güvenli Çıkış -->
@@ -211,10 +221,9 @@
 </div>
 
 <script>
-    // QR İndirme ve İzin Fonksiyonu
-    function indirQrKod(imageUrl) {
+    // QR İndirme Butonu / Doğrudan Fotoğraflara İzin Alarak İndirme Fonksiyonu
+    function qrKoduFotograflaraIndir(imageUrl) {
         if (navigator.share && navigator.canShare) {
-            // Mobil cihazlarda direkt paylaşım/galeriye kaydetme opsiyonu sunar
             fetch(imageUrl)
                 .then(response => response.blob())
                 .then(blob => {
@@ -222,15 +231,15 @@
                     navigator.share({
                         files: [file],
                         title: 'QR Kod',
-                        text: 'Sweet Waffle QR Kodunuz'
-                    }).catch(() => fallbackDownload(imageUrl));
-                }).catch(() => fallbackDownload(imageUrl));
+                        text: 'Sweet Waffle QR Kod'
+                    }).catch(() => standartIndir(imageUrl));
+                }).catch(() => standartIndir(imageUrl));
         } else {
-            fallbackDownload(imageUrl);
+            standartIndir(imageUrl);
         }
     }
 
-    function fallbackDownload(url) {
+    function standartIndir(url) {
         const a = document.createElement('a');
         a.href = url;
         a.download = 'sweet-waffle-qr.jpg';
@@ -239,12 +248,12 @@
         document.body.removeChild(a);
     }
 
-    function qrGirisCikisYap() {
-        alert("QR Kod tarayıcı açılıyor... (Giriş / Çıkış işlemi QR ile gerçekleştirilecektir)");
+    function qrGirisCikisIslemi() {
+        alert("QR Kod okuyucu açıldı. Giriş / Çıkış işlemi gerçekleştiriliyor.");
     }
 
     function islemYap(islemAdi) {
-        alert(islemAdi + " işlemi kaydedildi.");
+        alert(islemAdi + " işlemi başarıyla kaydedildi.");
     }
 
     function guvenliCikis() {
