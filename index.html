@@ -2,264 +2,1424 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sweet Waffle - Personel Paneli</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sweet Waffle - Personel ve Yönetim Paneli</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#5c3a21">
+    
+    <link rel="apple-touch-icon" href="logo.webp">
+    <link rel="icon" href="logo.webp">
+
+    <!-- Supabase, QR Generator, Export Kütüphaneleri -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <style>
+        :root {
+            --waffle-dark: #4a2e1b;
+            --waffle-main: #6f4e37;
+            --waffle-gold: #e6b85c;
+            --waffle-cream: #fff9f0;
+            --accent-orange: #e67e22;
+            --accent-green: #27ae60;
+            --accent-red: #e74c3c;
+            --accent-blue: #3498db;
+            --text-dark: #2c3e50;
+            --border-warm: #f0dec9;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background-color: #fcf8f2;
+            background: linear-gradient(135deg, #fdfbf7 0%, #faebd7 100%);
             margin: 0;
-            padding: 0;
-            color: #333;
-        }
-        .container {
-            max-width: 480px;
-            margin: 0 auto;
-            padding: 16px;
-            background-color: #fff;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 8px;
+            color: var(--text-dark);
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             box-sizing: border-box;
         }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: #ffffff;
+            padding: 16px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(95, 61, 38, 0.15);
+            border: 3px solid var(--waffle-gold);
+            box-sizing: border-box;
+            margin: auto;
+            position: relative;
         }
+
+        .container-admin {
+            width: 100% !important;
+            max-width: 1200px !important;
+            background: #ffffff;
+            padding: 16px;
+            border-radius: 18px;
+            box-shadow: 0 15px 40px rgba(95, 61, 38, 0.18);
+            border: 3px solid var(--waffle-gold);
+            box-sizing: border-box;
+            margin: auto;
+            position: relative;
+        }
+
         .close-btn {
-            background: #f0f0f0;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #f1f1f1;
             border: none;
-            border-radius: 50%;
             width: 32px;
             height: 32px;
+            border-radius: 50%;
             font-size: 16px;
+            font-weight: bold;
+            color: #555;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: background 0.2s;
+            z-index: 10;
         }
-        .logo-area {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .logo-area img {
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #e2bc84;
-        }
-        h2 {
-            text-align: center;
-            margin: 5px 0 15px 0;
-            font-size: 18px;
-            color: #2c2c2c;
-            font-family: Arial, sans-serif;
-        }
-        /* Tekil bildirim alanı ve Arial yazı tipi */
-        .notification-box {
-            background-color: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 10px 12px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            font-size: 13px;
-            font-family: Arial, sans-serif;
-        }
-        .welcome-text {
-            text-align: center;
-            font-weight: bold;
-            font-size: 15px;
-            margin: 10px 0 3px 0;
-            font-family: Arial, sans-serif;
-        }
-        .branch-info {
-            text-align: center;
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 12px;
-            font-family: Arial, sans-serif;
-        }
-        .section-box {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 12px;
-        }
-        .section-title {
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #4b5563;
-            font-family: Arial, sans-serif;
-        }
-        .qr-button {
-            background-color: #10b981;
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-            margin-bottom: 12px;
-            font-family: Arial, sans-serif;
-        }
-        .grid-buttons {
+        .close-btn:hover { background: #e0e0e0; color: #000; }
+
+        .admin-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: 12px;
         }
-        .action-btn {
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 12px;
-            color: white;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-            text-align: center;
+
+        @media (max-width: 850px) {
+            body { padding: 4px; }
+            .container-admin { padding: 10px; border-radius: 12px; }
+            .admin-grid { grid-template-columns: 1fr; }
+            .container { padding: 12px; border-radius: 14px; }
         }
-        .btn-yemek-cikis { background-color: #3b82f6; }
-        .btn-yemek-donus { background-color: #f97316; }
-        .btn-mola-cikis { background-color: #8b5cf6; }
-        .btn-mola-donus { background-color: #ea580c; }
         
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 12px;
+        .logo-container { text-align: center; margin-bottom: 8px; }
+        .logo-container img {
+            width: 70px; height: 70px; border-radius: 50%;
+            border: 3px solid var(--waffle-gold);
+            box-shadow: 0 4px 12px rgba(111,78,55,0.25);
+            object-fit: cover;
         }
-        .stat-card {
-            background: #fffbeb;
-            border: 1px solid #fcd34d;
-            border-radius: 8px;
-            padding: 8px;
-            text-align: center;
-            font-size: 12px;
-            font-weight: bold;
-            font-family: Arial, sans-serif;
+        
+        h2 { color: var(--waffle-dark); text-align: center; margin: 0 0 5px 0; font-size: 20px; font-weight: 800; font-family: Arial, sans-serif; }
+        h3 { color: var(--waffle-main); text-align: center; font-size: 15px; margin-bottom: 12px; font-weight: 700; font-family: Arial, sans-serif; }
+
+        .btn {
+            display: block; width: 100%; padding: 12px 14px; margin: 6px 0;
+            background: linear-gradient(135deg, var(--waffle-main), var(--waffle-dark));
+            color: white; border: none; border-radius: 12px; font-size: 14px;
+            cursor: pointer; text-align: center; font-weight: 700; font-family: Arial, sans-serif;
+            box-shadow: 0 3px 10px rgba(111,78,55,0.3);
+            transition: all 0.2s ease; box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
-        .logout-btn {
-            background-color: #4b5563;
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
+        .btn:active { transform: scale(0.98); }
+        
+        .btn-branch {
+            background: linear-gradient(135deg, #ffffff, var(--waffle-cream));
+            color: var(--waffle-dark); border: 2px solid var(--waffle-gold);
+            box-shadow: 0 2px 8px rgba(230,184,92,0.2); font-weight: 700; font-family: Arial, sans-serif;
         }
+
+        .btn-qr-scan { background: linear-gradient(135deg, #2ecc71, #27ae60); font-size: 15px; }
+        .btn-back { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+        .btn-danger { background: linear-gradient(135deg, #ff6b6b, #ee5253); color: #fff; }
+        .btn-warning { background: linear-gradient(135deg, #feca57, #ff9f43); color: #fff; }
+        .btn-success { background: linear-gradient(135deg, #2ed573, #26af5f); color: #fff; }
+
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+        .action-btn {
+            padding: 11px 6px; font-size: 12px; font-weight: 700; border: none;
+            border-radius: 10px; cursor: pointer; color: white; text-align: center; font-family: Arial, sans-serif;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1); transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center; gap: 4px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .btn-meal-in { background: linear-gradient(135deg, #54a0ff, #2e86de); }
+        .btn-meal-out { background: linear-gradient(135deg, #ff9f43, #e67e22); }
+        .btn-break-in { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .btn-break-out { background: linear-gradient(135deg, #f39c12, #d35400); }
+
+        select, input, textarea {
+            width: 100%; padding: 10px 12px; margin: 4px 0 8px 0;
+            border: 2px solid var(--border-warm); border-radius: 10px;
+            box-sizing: border-box; background: var(--waffle-cream);
+            font-size: 14px; color: var(--text-dark); font-family: Arial, sans-serif;
+        }
+        select:focus, input:focus, textarea:focus { border-color: var(--waffle-main); outline: none; background: #fff; }
+        
+        .hidden { display: none !important; }
+        .card { background: #fffaf5; padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 2px solid var(--border-warm); box-sizing: border-box; font-family: Arial, sans-serif; }
+        .msg-box { background: linear-gradient(135deg, #fff3cd, #ffe8a1); color: #856404; padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 12px; border: 1px solid #ffeeba; font-weight: 500; text-align: left; font-family: Arial, sans-serif; }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2c3e50; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 9999; transition: opacity 0.3s; pointer-events: none; font-family: Arial, sans-serif; }
+        .stats { display: flex; gap: 8px; margin-bottom: 10px; }
+        .stat-box { background: linear-gradient(135deg, #fef6ec, #faebd7); padding: 8px; border-radius: 10px; flex: 1; text-align: center; font-size: 11px; color: var(--waffle-main); border: 2px solid var(--waffle-gold); font-weight: 600; font-family: Arial, sans-serif; }
+        .log-list { font-size: 11px; max-height: 90px; overflow-y: auto; padding-left: 10px; margin: 0; color: #555; text-align: left; font-family: Arial, sans-serif; }
+        .log-list li { margin-bottom: 4px; }
+        
+        table { width: 100%; font-size: 11px; border-collapse: collapse; margin-top: 4px; background: #fff; border-radius: 8px; overflow: hidden; font-family: Arial, sans-serif; }
+        table, th, td { border: 1px solid var(--border-warm); padding: 5px; text-align: center; }
+        th { background: #faebd7; color: var(--waffle-dark); font-weight: 700; }
+        #reader { width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
     </style>
 </head>
-<body>
+<body id="body-layout">
 
-<div class="container">
-    <!-- Üst Kısım -->
-    <div class="header">
-        <button class="close-btn" onclick="window.history.back()">✕</button>
+<div id="toast-container"></div>
+
+<div class="container" id="main-container-box">
+    <button class="close-btn" onclick="goBackToMain()" title="Ana Menüye Dön">✕</button>
+
+    <div class="logo-container">
+        <img src="logo.webp" alt="Sweet Waffle Logo">
+    </div>
+    <h2>Sweet Waffle</h2>
+
+    <!-- GENEL ORTAK DUYURU ALANI -->
+    <div id="global-announcement-wrapper"></div>
+
+    <!-- 1. LOKASYON SEÇİMİ -->
+    <div id="main-selection-screen">
+        <h3>Şube Seçimi Yapınız</h3>
+        <button class="btn btn-branch" onclick="selectLocation('MerkezYonetim')">🏢 Merkez (Yönetim & Takip)</button>
+        <button class="btn btn-branch" onclick="selectLocation('Kurtköy')">📍 Kurtköy Şubesi</button>
+        <button class="btn btn-branch" onclick="selectLocation('Soğanlık')">📍 Soğanlık Şubesi</button>
+        <button class="btn btn-branch" onclick="selectLocation('Yeni')">📍 Yeni Şube</button>
     </div>
 
-    <!-- Logo ve Başlık -->
-    <div class="logo-area">
-        <img src="logo.png" alt="Sweet Waffle Logo">
-        <h2>Sweet Waffle</h2>
+    <!-- 1.B. MERKEZ GİRİŞ ŞİFRE EKRANI -->
+    <div id="admin-login-screen" class="hidden">
+        <h3>🏢 Merkez Yönetim Girişi</h3>
+        
+        <form id="admin-login-form" autocomplete="on" onsubmit="event.preventDefault(); verifyAdminLogin();">
+            <label for="admin-user-select"><strong>Yönetici Seçin:</strong></label>
+            <select id="admin-user-select" name="username" autocomplete="username" onchange="onAdminSelectChange()">
+                <option value="">Yönetici Seçiniz...</option>
+                <option value="Merkez Yetkilisi">Merkez Yetkilisi</option>
+            </select>
+            
+            <label for="admin-password"><strong>Yönetici Şifresi:</strong></label>
+            <input type="password" id="admin-password" name="password" autocomplete="current-password" placeholder="Şifrenizi girin">
+            
+            <button type="submit" class="btn">Panele Giriş Yap</button>
+        </form>
+
+        <button class="btn btn-back" onclick="goBackToMain()">← Ana Menüye Dön</button>
     </div>
 
-    <!-- Tekil Bildirim Kutusu (Arial Yazı Karakteri ile) -->
-    <div class="notification-box">
-        📢 <strong>Merkezden Bildirim Var:</strong> Merhabalar
+    <!-- 2. ŞUBE PERSONEL GİRİŞ EKRANI -->
+    <div id="login-screen" class="hidden">
+        <h3 id="login-title">Şube Girişi</h3>
+        
+        <form id="staff-login-form" autocomplete="on" onsubmit="event.preventDefault(); login();">
+            <label for="staff-select"><strong>Personel Seçin:</strong></label>
+            <select id="staff-select" name="username" autocomplete="username" onchange="onStaffSelectChange()"><option value="">Personel Seçiniz...</option></select>
+            
+            <label for="staff-password"><strong>Şifre:</strong></label>
+            <input type="password" id="staff-password" name="password" autocomplete="current-password" placeholder="Şifreniz">
+            
+            <button type="submit" class="btn">Sisteme Giriş Yap</button>
+        </form>
+
+        <button class="btn btn-back" onclick="goBackToMain()">← Ana Menüye Dön</button>
     </div>
 
-    <div class="welcome-text">Hoş Geldiniz, MEDİNE</div>
-    <div class="branch-info">📍 Şube: Soğanlık</div>
+    <!-- 3. PERSONEL PANELİ -->
+    <div id="panel-screen" class="hidden">
+        <h3 id="welcome-title" style="margin-bottom: 2px;">Hoş Geldiniz</h3>
+        <p id="user-branch-info" style="text-align: center; color: var(--waffle-main); font-size: 12px; margin-bottom: 8px; font-weight: 700; font-family: Arial, sans-serif;"></p>
 
-    <!-- Haftalık Çalışma Programı -->
-    <div class="section-box">
-        <div class="section-title">📅 HAFTALIK ÇALIŞMA & İZİN PROGRAMIM</div>
-        <div style="font-size: 12px; text-align: center; color: #777; padding: 4px; font-family: Arial, sans-serif;">Merkez henüz program tanımlamadı.</div>
-    </div>
+        <div id="panel-announcement-wrapper"></div>
 
-    <!-- QR Kod Okut (Giriş / Çıkış İşlemlerini Artık Bu Yönetiyor) -->
-    <button class="qr-button" onclick="qrGirisCikisIslemi()">
-        📍 📷 QR Kod Okut (Giriş / Çıkış)
-    </button>
-
-    <!-- Hızlı Çalışma İşlemleri (İşe Giriş ve İşten Çıkış Butonları Kaldırıldı) -->
-    <div class="section-box">
-        <div class="section-title">⏱️ HIZLI ÇALIŞMA İŞLEMLERİ</div>
-        <div class="grid-buttons">
-            <button class="action-btn btn-yemek-cikis" onclick="islemYap('Yemek Çıkış')">🍽️ Yemek Çıkış</button>
-            <button class="action-btn btn-yemek-donus" onclick="islemYap('Yemek Dönüş')">🔙 Yemek Dönüş</button>
-            <button class="action-btn btn-mola-cikis" onclick="islemYap('Mola Çıkış')">☕ Mola Çıkış</button>
-            <button class="action-btn btn-mola-donus" onclick="islemYap('Mola Dönüş')">🔙 Mola Dönüş</button>
+        <div id="active-timer-box" class="hidden" style="background: linear-gradient(135deg, #d1ecf1, #bee5eb); color: #0c5460; padding: 8px; border-radius: 10px; margin-bottom: 10px; font-weight: 700; text-align: center; border: 2px solid #17a2b8; font-size: 11px; font-family: Arial, sans-serif;">
+            ⏳ Kalan Süre: <span id="countdown-display">00:00</span>
         </div>
+
+        <div class="card" style="background: #fffdf9; border-color: var(--waffle-gold); text-align: left;">
+            <strong style="font-size: 11px; color: var(--waffle-dark); display: block; margin-bottom: 4px; text-transform: uppercase;">📅 Haftalık Çalışma & İzin Programım</strong>
+            <div style="max-height: 100px; overflow-y: auto;">
+                <table>
+                    <thead><tr><th>Gün</th><th>Çalışma Saatleri</th><th>Durum</th></tr></thead>
+                    <tbody id="user-shift-view-table"><tr><td colspan="3">Merkez henüz program tanımlamadı.</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <button class="btn btn-qr-scan" onclick="openQrScannerDirectly()">📍📷 QR Kod Okut (Giriş / Çıkış)</button>
+
+        <div class="card" style="padding: 10px; text-align: left;">
+            <strong style="font-size: 11px; color: var(--waffle-dark); display: block; margin-bottom: 6px; text-transform: uppercase;">⏱️ Hızlı Çalışma İşlemleri</strong>
+            <div class="action-grid" style="grid-template-columns: 1fr 1fr;">
+                <button class="action-btn btn-meal-in" onclick="triggerAction('Yemek Molası Çıkış', 45)">🍽️ Yemek Çıkış</button>
+                <button class="action-btn btn-meal-out" onclick="triggerAction('Yemek Molası Dönüş', 0)">🔙 Yemek Dönüş</button>
+                <button class="action-btn btn-break-in" onclick="triggerAction('Normal Mola Çıkış', 15)">☕ Mola Çıkış</button>
+                <button class="action-btn btn-break-out" onclick="triggerAction('Normal Mola Dönüş', 0)">🔙 Mola Dönüş</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box"><strong>Haftalık Çalışma</strong><br><span id="weekly-hours" style="font-size: 12px; font-weight: 800; color: var(--waffle-dark);">0s 0d</span></div>
+            <div class="stat-box"><strong>Aylık Çalışma</strong><br><span id="monthly-hours" style="font-size: 12px; font-weight: 800; color: var(--waffle-dark);">0s 0d</span></div>
+        </div>
+
+        <div class="card" style="margin-bottom: 10px;">
+            <strong style="font-size: 11px; color: var(--waffle-dark); text-transform: uppercase; display: block; text-align: left;">📋 Günlük Hareketlerim</strong>
+            <ul class="log-list" id="today-logs" style="margin-top: 4px;"><li>Kayıt bulunmuyor.</li></ul>
+        </div>
+
+        <button class="btn btn-back" onclick="logout()">Güvenli Çıkış Yap</button>
     </div>
 
-    <!-- Çalışma İstatistikleri -->
-    <div class="stats-grid">
-        <div class="stat-card">Haftalık Çalışma<br><span style="font-size:11px; color:#555; font-weight:normal;">0s 0d</span></div>
-        <div class="stat-card">Aylık Çalışma<br><span style="font-size:11px; color:#555; font-weight:normal;">0s 0d</span></div>
+    <!-- 3.B. QR KAMERA TARAYICI EKRANI -->
+    <div id="qr-scanner-screen" class="hidden">
+        <h3>📷 Şube QR Kod Tarayıcı</h3>
+        <p style="text-align: center; font-size: 11px; color: #666; font-family: Arial, sans-serif;">Lütfen şubenin QR kodunu kameraya okutun (Aynı kodu 2. kez okutmanız ÇIKIŞ olarak işlenir).</p>
+        <div id="reader"></div>
+        <button class="btn btn-back" onclick="closeQrScanner()">Kamerayı Kapat</button>
     </div>
 
-    <!-- Günlük Hareketler -->
-    <div class="section-box">
-        <div class="section-title">📋 GÜNLÜK HAREKETLERİM</div>
-        <div style="font-size: 12px; color: #777; padding: 4px; font-family: Arial, sans-serif;">Kayıt bulunmuyor.</div>
-    </div>
+    <!-- 4. MERKEZ YÖNETİM PANELİ -->
+    <div id="admin-screen" class="hidden">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--waffle-gold); padding-bottom: 6px; margin-bottom: 12px; gap: 6px;">
+            <h3 style="margin: 0; color: var(--waffle-dark); font-size: 16px; text-align: left;">🏢 Sweet Waffle - Yönetim Masası</h3>
+            <div style="display: flex; gap: 4px;">
+                <button class="btn btn-success" style="display:inline-block; width:auto; padding: 5px 8px; margin: 0; font-size: 11px;" onclick="exportToExcel()">📊 Excel</button>
+                <button class="btn btn-danger" style="display:inline-block; width:auto; padding: 5px 8px; margin: 0; font-size: 11px;" onclick="exportToPDF()">📑 PDF</button>
+            </div>
+        </div>
 
-    <!-- Güvenli Çıkış -->
-    <button class="logout-btn" onclick="guvenliCikis()">Güvenli Çıkış Yap</button>
+        <!-- MERKEZ CANLI MOLA / YEMEK TAKİP ALANI -->
+        <div class="card" style="background: #fff9f0; border: 2px solid var(--waffle-gold); text-align: left; margin-bottom: 12px;">
+            <strong style="font-size: 12px; color: var(--waffle-dark); display: block; margin-bottom: 6px;">☕🍽️ Şu Anda Molada / Yemekte Olan Personeller (Canlı Sayaç)</strong>
+            <div style="max-height: 120px; overflow-y: auto;">
+                <table>
+                    <thead><tr><th>Şube</th><th>Personel</th><th>Mola Türü</th><th>Kalan Süre (Canlı)</th></tr></thead>
+                    <tbody id="admin-active-breaks-tbody"><tr><td colspan="4">Şu an molada/yemekte olan personel bulunmuyor.</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ŞUBE QR KODLARI YÖNETİM ALANI -->
+        <div class="card" style="background: #fffdf9; border: 2px solid var(--waffle-gold); text-align: left;">
+            <strong style="font-size: 11px; color: var(--waffle-dark); display: block; margin-bottom: 4px;">🖼️ Şube Konum Bazlı QR Kodlar (Fotoğraflara İndir)</strong>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button class="btn btn-branch" style="width: auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="downloadQrJpg('Kurtköy')">📍 Kurtköy QR (Fotoğraflara İndir)</button>
+                <button class="btn btn-branch" style="width: auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="downloadQrJpg('Soğanlık')">📍 Soğanlık QR (Fotoğraflara İndir)</button>
+                <button class="btn btn-branch" style="width: auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="downloadQrJpg('Yeni')">📍 Yeni Şube QR (Fotoğraflara İndir)</button>
+            </div>
+        </div>
+
+        <div class="admin-grid">
+            <div>
+                <div class="card" style="border: 2px solid var(--waffle-gold); background: #fffdf9; text-align: left;">
+                    <strong style="font-size: 11px; color: var(--waffle-dark); display: block; margin-bottom: 4px;">📁 Personel Dosyası & Detaylı Rapor</strong>
+                    <select id="admin-dossier-select" onchange="renderAdminStaffDossier()" style="margin-top: 2px; padding: 5px; font-size: 11px;">
+                        <option value="">Rapor için personel seçiniz...</option>
+                    </select>
+                    <div id="dossier-result-area" class="hidden" style="margin-top: 4px; background: #fff; padding: 5px; border-radius: 8px; border: 1px solid var(--border-warm);">
+                        <div style="font-size: 10px; margin-bottom: 2px; font-weight: 700; color: var(--waffle-dark);" id="dossier-summary-text"></div>
+                        <div style="max-height: 75px; overflow-y: auto;">
+                            <table>
+                                <thead><tr><th>Şube</th><th>İşlem</th><th>Zaman</th><th>İşlem</th></tr></thead>
+                                <tbody id="dossier-logs-table"><tr><td colspan="4">Veri yok</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="background: #fffdf9; text-align: left;">
+                    <strong style="font-size: 11px; color: var(--waffle-dark); display: block; margin-bottom: 4px;">⏰ Haftalık Çalışma & İzin Planlayıcı</strong>
+                    <div style="display: flex; gap: 4px;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 10px; font-weight: bold; font-family: Arial, sans-serif;">Şube:</label>
+                            <select id="shift-branch-select" onchange="populateShiftStaffSelect()" style="padding: 4px; font-size: 11px;">
+                                <option value="Kurtköy">Kurtköy</option>
+                                <option value="Soğanlık">Soğanlık</option>
+                                <option value="Yeni">Yeni Şube</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 10px; font-weight: bold; font-family: Arial, sans-serif;">Personel:</label>
+                            <select id="shift-staff-select" style="padding: 4px; font-size: 11px;"></select>
+                        </div>
+                    </div>
+                    <div style="max-height: 130px; overflow-y: auto; margin-top: 4px;">
+                        <table>
+                            <thead><tr><th>Gün</th><th>Giriş</th><th>Çıkış</th><th>İzin?</th></tr></thead>
+                            <tbody id="admin-weekly-shift-tbody"></tbody>
+                        </table>
+                    </div>
+                    <button class="btn" style="margin: 4px 0 0 0; padding: 8px; font-size: 11px;" onclick="saveStaffWeeklySchedule()">Haftalık Vardiya Planını Kaydet</button>
+                </div>
+            </div>
+
+            <div>
+                <div class="card" style="text-align: left;">
+                    <strong style="font-size: 11px; color: var(--waffle-dark);">📢 Personele Bildirim Gönder:</strong>
+                    <textarea id="admin-msg-input" rows="2" placeholder="Tüm personel telefonlarına anlık düşecek duyuruyu yazın..." style="font-size:11px;"></textarea>
+                    <button class="btn" style="margin: 0; padding: 7px; font-size: 11px;" onclick="sendBroadcastMessage()">Bildirimi Yayınla</button>
+                </div>
+
+                <div class="card" style="text-align: left;">
+                    <strong style="font-size: 11px; color: var(--waffle-dark);">📋 Aktif Duyurular (Sil / Düzenle):</strong>
+                    <div id="admin-messages-list" style="max-height: 110px; overflow-y: auto; margin-top: 4px;">
+                        <p style="font-size: 11px; color: #777; font-family: Arial, sans-serif;">Aktif duyuru yok.</p>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 6px; text-align: left;">
+                    <div style="display: flex; gap: 4px; width: 100%; margin-bottom: 4px;">
+                        <select id="branch-filter" onchange="updateAdminTable()" style="margin: 0; padding: 3px; font-size: 10px; flex: 1;">
+                            <option value="Tümü">Tüm Şubeler</option>
+                            <option value="Kurtköy">Kurtköy</option>
+                            <option value="Soğanlık">Soğanlık</option>
+                            <option value="Yeni">Yeni Şube</option>
+                        </select>
+                        <select id="staff-filter" onchange="updateAdminTable()" style="margin: 0; padding: 3px; font-size: 10px; flex: 1;">
+                            <option value="Tümü">Tüm Personeller</option>
+                        </select>
+                    </div>
+                    <div style="max-height: 110px; overflow-y: auto;">
+                        <table>
+                            <thead><tr><th>Şube</th><th>Personel</th><th>İşlem</th><th>Zaman</th><th>İşlem</th></tr></thead>
+                            <tbody id="admin-log-table"><tr><td colspan="5">Kayıt bulunmuyor.</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-back" style="margin-top: 10px;" onclick="goBackToMain()">← Ana Menüye Dön</button>
+    </div>
 </div>
 
 <script>
-    // QR İndirme Butonu / Doğrudan Fotoğraflara İzin Alarak İndirme Fonksiyonu
-    function qrKoduFotograflaraIndir(imageUrl) {
-        if (navigator.share && navigator.canShare) {
-            fetch(imageUrl)
-                .then(response => response.blob())
-                .then(blob => {
-                    const file = new File([blob], "sweet-waffle-qr.jpg", { type: blob.type });
-                    navigator.share({
-                        files: [file],
-                        title: 'QR Kod',
-                        text: 'Sweet Waffle QR Kod'
-                    }).catch(() => standartIndir(imageUrl));
-                }).catch(() => standartIndir(imageUrl));
-        } else {
-            standartIndir(imageUrl);
+    const SUPABASE_URL = 'https://yatgnoiybbjvmreikeqs.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_8BxYi7oOUnHvkHAJQNaitQ_kKlHk_Y_';
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const database = {
+        "Kurtköy": { 
+            staff: [
+                { name: "NESRİN", pass: "4821" }, 
+                { name: "BENGİ", pass: "5932" },
+                { name: "AYTEN", pass: "6143" },
+                { name: "EZGİ", pass: "7254" },
+                { name: "ECE", pass: "8365" },
+                { name: "ESMA", pass: "9476" },
+                { name: "RABİA", pass: "1587" },
+                { name: "HİLAL", pass: "2698" },
+                { name: "SERRA", pass: "3412" }
+            ], 
+            lat: 40.916286, lng: 29.303978, plusCode: "W883+CH" 
+        },
+        "Soğanlık": { 
+            staff: [
+                { name: "MEDİNE", pass: "1001" },
+                { name: "MALİVAN", pass: "1002" },
+                { name: "DİLDAN", pass: "1003" },
+                { name: "ZEYNEP", pass: "1004" },
+                { name: "BÜŞRA", pass: "1005" },
+                { name: "YASEMİN", pass: "1006" },
+                { name: "CAN", pass: "1007" },
+                { name: "DURDANE", pass: "1008" }
+            ], 
+            lat: 40.914869, lng: 29.203213, plusCode: "W673+W7" 
+        },
+        "Yeni": { 
+            staff: [
+                { name: "Burak Şahin", pass: "1234" }, 
+                { name: "Zeynep Koç", pass: "1234" }
+            ], 
+            lat: 41.00820, lng: 28.97840, plusCode: "F4V3+3G" 
+        }
+    };
+
+    const ADMIN_PASS = "memalt2026";
+    const DAYS_OF_WEEK = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+
+    let currentUser = null;
+    let currentBranch = null;
+    let countdownInterval = null;
+    let adminActiveBreaksInterval = null;
+    let html5QrCode = null;
+    window.globalLogsCache = [];
+    window.globalSchedulesCache = {};
+    window.globalMessagesCache = [];
+
+    let lastToastMsg = null;
+    let lastToastTime = 0;
+
+    function showToast(msg) {
+        let now = Date.now();
+        if (lastToastMsg === msg && (now - lastToastTime) < 3000) {
+            return;
+        }
+        lastToastMsg = msg;
+        lastToastTime = now;
+
+        let existing = document.querySelector('.toast');
+        if(existing) existing.remove();
+        let t = document.createElement('div');
+        t.className = 'toast';
+        t.innerText = msg;
+        document.body.appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2500);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        registerServiceWorker();
+        setupRealtimeSubscriptions();
+        fetchAllData();
+        buildAdminShiftTableTemplate();
+
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) { fetchAllData(); checkAndRestoreTimer(); }
+        });
+        checkAndRestoreTimer();
+        setInterval(fetchAllData, 15000);
+    });
+
+    function registerServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                if ('Notification' in window && Notification.permission !== 'granted') {
+                    Notification.requestPermission();
+                }
+            }).catch(err => console.log('Service Worker kayıt hatası:', err));
         }
     }
 
-    function standartIndir(url) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'sweet-waffle-qr.jpg';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+    async function fetchAllData() {
+        await fetchMessages();
+        await fetchLogs();
+        await fetchSchedules();
     }
 
-    function qrGirisCikisIslemi() {
-        alert("QR Kod okuyucu açıldı. Giriş / Çıkış işlemi gerçekleştiriliyor.");
+    function setupRealtimeSubscriptions() {
+        supabaseClient
+            .channel('public-db-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => {
+                fetchMessages();
+                if (payload.eventType === 'INSERT') {
+                    showBrowserNotification("Sweet Waffle - Yeni Duyuru", payload.new.text);
+                }
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'logs' }, () => fetchLogs())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, () => fetchSchedules())
+            .subscribe();
     }
 
-    function islemYap(islemAdi) {
-        alert(islemAdi + " işlemi başarıyla kaydedildi.");
+    function showBrowserNotification(title, body) {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification(title, {
+                    body: body,
+                    icon: 'logo.webp',
+                    badge: 'logo.webp',
+                    vibrate: [200, 100, 200],
+                    tag: 'sweet-waffle-notification',
+                    renotify: true
+                });
+            });
+        }
     }
 
-    function guvenliCikis() {
-        alert("Güvenli çıkış yapıldı.");
+    async function fetchMessages() {
+        const { data, error } = await supabaseClient.from('messages').select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+            window.globalMessagesCache = data;
+            renderGlobalAnnouncements(data);
+            renderUserMessages(data);
+            updateAdminMessagesList(data);
+        }
+    }
+
+    async function fetchLogs() {
+        const { data, error } = await supabaseClient.from('logs').select('*');
+        if (!error && data) {
+            window.globalLogsCache = data;
+            updateStaffFilterOptions();
+            updateAdminDossierOptions();
+            if(!document.getElementById("admin-screen").classList.contains("hidden")) {
+                updateAdminTable();
+                renderAdminStaffDossier();
+                renderAdminActiveBreaks();
+            }
+            if(currentUser) updateUserPanelUI();
+        }
+    }
+
+    async function fetchSchedules() {
+        const { data, error } = await supabaseClient.from('schedules').select('*');
+        if (!error && data) {
+            window.globalSchedulesCache = {};
+            data.forEach(item => { window.globalSchedulesCache[item.staff_name] = item.schedule_data; });
+            if(currentUser) { renderUserShiftView(); updateUserWeeklyHoursSummary(); }
+        }
+    }
+
+    function renderGlobalAnnouncements(messages) {
+        const container = document.getElementById("global-announcement-wrapper");
+        if (!container) return;
+        if (!messages || messages.length === 0) { container.innerHTML = ""; return; }
+        container.innerHTML = "";
+        messages.forEach(msgObj => {
+            let box = document.createElement("div");
+            box.className = "msg-box";
+            box.innerHTML = `📢 <strong>Merkezden Bildirim Var:</strong><p style="margin:4px 0 0 0; font-size:12px; font-weight:600; color:#4a2e1b; font-family:Arial, sans-serif;">${msgObj.text}</p>`;
+            container.appendChild(box);
+        });
+    }
+
+    function renderUserMessages(messages) {
+        const container = document.getElementById("panel-announcement-wrapper");
+        if (!container) return;
+        if (!messages || messages.length === 0) { container.innerHTML = ""; return; }
+        container.innerHTML = "";
+        messages.forEach(msgObj => {
+            let box = document.createElement("div");
+            box.className = "msg-box";
+            box.innerHTML = `📢 <strong>Merkez Duyurusu:</strong><p style="margin:4px 0 0 0; font-size:12px; font-weight:600; color:#4a2e1b; font-family:Arial, sans-serif;">${msgObj.text}</p>`;
+            container.appendChild(box);
+        });
+    }
+
+    function updateAdminMessagesList(messages) {
+        const listDiv = document.getElementById("admin-messages-list");
+        if (!listDiv) return;
+        if (!messages || messages.length === 0) {
+            listDiv.innerHTML = '<p style="font-size: 11px; color: #777; font-family: Arial, sans-serif;">Aktif duyuru yok.</p>';
+            return;
+        }
+        listDiv.innerHTML = "";
+        messages.forEach(msg => {
+            let div = document.createElement("div");
+            div.style.cssText = "font-size:11px; margin:4px 0; background:#fff; padding:6px; border-radius:6px; border:1px solid #ddd; display:flex; justify-content:space-between; align-items:center; font-family:Arial, sans-serif;";
+            
+            let safeText = (msg.text || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            
+            div.innerHTML = `
+                <span style="flex:1; margin-right:6px;">📢 ${msg.text || ''}</span>
+                <div>
+                    <button class="btn-warning" style="padding:3px 6px; font-size:10px; border-radius:4px; margin-right:3px;" onclick="editAdminMessage('${msg.id}', '${safeText}')">Düzenle</button>
+                    <button class="btn-danger" style="padding:3px 6px; font-size:10px; border-radius:4px;" onclick="deleteAdminMessage('${msg.id}')">Sil</button>
+                </div>
+            `;
+            listDiv.appendChild(div);
+        });
+    }
+
+    async function deleteAdminMessage(id) {
+        setTimeout(async () => {
+            if (window.confirm("Bu duyuruyu silmek istediğinize emin misiniz?")) {
+                const { error } = await supabaseClient.from('messages').delete().eq('id', id);
+                if (!error) fetchMessages();
+            }
+        }, 50);
+    }
+
+    async function editAdminMessage(id, oldText) {
+        setTimeout(async () => {
+            const newText = prompt("Duyuruyu düzenleyin:", oldText);
+            if (newText !== null && newText.trim() !== "") {
+                const { error } = await supabaseClient.from('messages').update({ text: newText.trim() }).eq('id', id);
+                if (!error) fetchMessages();
+            }
+        }, 50);
+    }
+
+    async function deleteLogItem(id) {
+        setTimeout(async () => {
+            if (window.confirm("Bu hareket kaydını silmek istediğinize emin misiniz?")) {
+                const { error } = await supabaseClient.from('logs').delete().eq('id', id);
+                if (!error) {
+                    showToast("Kayıt silindi.");
+                    fetchLogs();
+                } else {
+                    showToast("Silme başarısız oldu.");
+                }
+            }
+        }, 50);
+    }
+
+    async function editLogItem(id, oldAction) {
+        setTimeout(async () => {
+            const newAction = prompt("İşlem türünü güncelleyin (Örn: İşe Giriş, İşten Çıkış, Yemek Molası Çıkış, Normal Mola Çıkış):", oldAction);
+            if (newAction !== null && newAction.trim() !== "") {
+                const { error } = await supabaseClient.from('logs').update({ action: newAction.trim() }).eq('id', id);
+                if (!error) {
+                    showToast("Kayıt güncellendi.");
+                    fetchLogs();
+                } else {
+                    showToast("Güncelleme başarısız oldu.");
+                }
+            }
+        }, 50);
+    }
+
+    async function sendBroadcastMessage() {
+        const input = document.getElementById("admin-msg-input");
+        const text = input.value.trim();
+        if (!text) { showToast("Lütfen duyuru metni yazın."); return; }
+
+        const { error } = await supabaseClient.from('messages').insert([{ text: text }]);
+        if (!error) {
+            showToast("Duyuru yayınlandı.");
+            input.value = "";
+            fetchMessages();
+        }
+    }
+
+    // Şube QR Kodunu Doğrudan Fotoğraflara İzin Alarak / Paylaşarak İndirme Fonksiyonu
+    function downloadQrJpg(branchKey) {
+        const branchInfo = database[branchKey];
+        if (!branchInfo) return;
+        const qrText = `SWEET_WAFFLE_BRANCH:${branchKey}_LAT:${branchInfo.lat}_LNG:${branchInfo.lng}_PLUSCODE:${branchInfo.plusCode}`;
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(qrText)}`;
+
+        const imageObj = new Image();
+        imageObj.crossOrigin = "anonymous";
+        imageObj.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 500; canvas.height = 500;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(0, 0, 500, 500);
+            ctx.drawImage(imageObj, 0, 0, 500, 500);
+            
+            canvas.toBlob(blob => {
+                if (!blob) {
+                    standartIndirFallback(canvas.toDataURL("image/jpeg", 1.0), branchKey);
+                    return;
+                }
+                const file = new File([blob], `SweetWaffle_${branchKey}_QR.jpg`, { type: "image/jpeg" });
+                
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    navigator.share({
+                        files: [file],
+                        title: `${branchKey} Şubesi QR Kod`,
+                        text: `Sweet Waffle ${branchKey} Şubesi Giriş/Çıkış QR Kodu`
+                    }).catch(() => {
+                        standartIndirFallback(canvas.toDataURL("image/jpeg", 1.0), branchKey);
+                    });
+                } else if (navigator.share) {
+                    navigator.share({
+                        title: `${branchKey} Şubesi QR Kod`,
+                        text: `Sweet Waffle ${branchKey} Şubesi QR Kodu`,
+                        url: qrApiUrl
+                    }).catch(() => {
+                        standartIndirFallback(canvas.toDataURL("image/jpeg", 1.0), branchKey);
+                    });
+                } else {
+                    standartIndirFallback(canvas.toDataURL("image/jpeg", 1.0), branchKey);
+                }
+            }, "image/jpeg", 1.0);
+        };
+        imageObj.onerror = function() {
+            showToast("QR kod görseli oluşturulamadı.");
+        };
+        imageObj.src = qrApiUrl;
+    }
+
+    function standartIndirFallback(dataUrl, branchKey) {
+        let downloadLink = document.createElement("a");
+        downloadLink.href = dataUrl;
+        downloadLink.download = `SweetWaffle_${branchKey}_QR.jpg`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        showToast("QR kod cihaza indirildi.");
+    }
+
+    function buildAdminShiftTableTemplate() {
+        const tbody = document.getElementById("admin-weekly-shift-tbody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        DAYS_OF_WEEK.forEach((day, index) => {
+            let tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td style="font-weight:bold; font-size:10px;">${day}</td>
+                <td><input type="time" id="shift-in-${index}" value="09:00" style="padding:2px; font-size:10px; margin:0;"></td>
+                <td><input type="time" id="shift-out-${index}" value="18:00" style="padding:2px; font-size:10px; margin:0;"></td>
+                <td><input type="checkbox" id="shift-off-${index}" style="margin:0;"></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function populateShiftStaffSelect() {
+        const branchSelect = document.getElementById("shift-branch-select");
+        const staffSelect = document.getElementById("shift-staff-select");
+        if (!branchSelect || !staffSelect) return;
+        const branchKey = branchSelect.value;
+        staffSelect.innerHTML = "";
+        if (database[branchKey] && database[branchKey].staff) {
+            database[branchKey].staff.forEach(st => {
+                let opt = document.createElement("option");
+                opt.value = st.name;
+                opt.innerText = st.name;
+                staffSelect.appendChild(opt);
+            });
+        }
+        loadStaffWeeklyScheduleToAdmin();
+    }
+
+    async function loadStaffWeeklyScheduleToAdmin() {
+        const staffSelect = document.getElementById("shift-staff-select");
+        if (!staffSelect || !staffSelect.value) return;
+        const staffName = staffSelect.value;
+        const schedule = window.globalSchedulesCache[staffName];
+        
+        DAYS_OF_WEEK.forEach((day, index) => {
+            let inInput = document.getElementById(`shift-in-${index}`);
+            let outInput = document.getElementById(`shift-out-${index}`);
+            let offCheck = document.getElementById(`shift-off-${index}`);
+            
+            if (schedule && schedule[day]) {
+                if (schedule[day].off) {
+                    offCheck.checked = true;
+                    inInput.value = "09:00";
+                    outInput.value = "18:00";
+                } else {
+                    offCheck.checked = false;
+                    inInput.value = schedule[day].start || "09:00";
+                    outInput.value = schedule[day].end || "18:00";
+                }
+            } else {
+                offCheck.checked = false;
+                inInput.value = "09:00";
+                outInput.value = "18:00";
+            }
+        });
+    }
+
+    async function saveStaffWeeklySchedule() {
+        const staffSelect = document.getElementById("shift-staff-select");
+        if (!staffSelect || !staffSelect.value) { showToast("Lütfen personel seçin."); return; }
+        const staffName = staffSelect.value;
+
+        let scheduleData = {};
+        DAYS_OF_WEEK.forEach((day, index) => {
+            let inVal = document.getElementById(`shift-in-${index}`).value;
+            let outVal = document.getElementById(`shift-out-${index}`).value;
+            let offVal = document.getElementById(`shift-off-${index}`).checked;
+            scheduleData[day] = { start: inVal, end: outVal, off: offVal };
+        });
+
+        const { error } = await supabaseClient
+            .from('schedules')
+            .upsert([{ staff_name: staffName, schedule_data: scheduleData }], { onConflict: 'staff_name' });
+
+        if (!error) {
+            showToast("Haftalık vardiya planı kaydedildi.");
+            fetchSchedules();
+        } else {
+            showToast("Kayıt hatası oluştu.");
+        }
+    }
+
+    function selectLocation(locKey) {
+        if (locKey === 'MerkezYonetim') {
+            document.getElementById("main-selection-screen").classList.add("hidden");
+            document.getElementById("admin-login-screen").classList.remove("hidden");
+        } else {
+            currentBranch = locKey;
+            document.getElementById("main-selection-screen").classList.add("hidden");
+            document.getElementById("login-title").innerText = `${locKey} Şubesi - Personel Girişi`;
+            document.getElementById("login-screen").classList.remove("hidden");
+            populateStaffSelect(locKey);
+        }
+    }
+
+    function populateStaffSelect(branchKey) {
+        const select = document.getElementById("staff-select");
+        select.innerHTML = '<option value="">Personel Seçiniz...</option>';
+        if (database[branchKey] && database[branchKey].staff) {
+            database[branchKey].staff.forEach(st => {
+                let opt = document.createElement("option");
+                opt.value = st.name;
+                opt.innerText = st.name;
+                select.appendChild(opt);
+            });
+        }
+    }
+
+    function onStaffSelectChange() {
+        const staffName = document.getElementById("staff-select").value;
+        const passInput = document.getElementById("staff-password");
+        if (!staffName) {
+            passInput.value = "";
+            return;
+        }
+
+        let savedPass = localStorage.getItem(`sweet_waffle_pass_${currentBranch}_${staffName}`);
+        if (savedPass) {
+            passInput.value = savedPass;
+        } else {
+            passInput.value = "";
+        }
+    }
+
+    function onAdminSelectChange() {
+        const adminUser = document.getElementById("admin-user-select").value;
+        const passInput = document.getElementById("admin-password");
+        if (!adminUser) {
+            passInput.value = "";
+            return;
+        }
+
+        let savedPass = localStorage.getItem(`sweet_waffle_pass_Admin_${adminUser}`);
+        if (savedPass) {
+            passInput.value = savedPass;
+        } else {
+            passInput.value = "";
+        }
+    }
+
+    function verifyAdminLogin() {
+        const adminUser = document.getElementById("admin-user-select").value;
+        const pass = document.getElementById("admin-password").value;
+
+        if (!adminUser) { showToast("Lütfen yönetici seçin."); return; }
+
+        if (pass === ADMIN_PASS) {
+            localStorage.setItem(`sweet_waffle_pass_Admin_${adminUser}`, pass);
+
+            document.getElementById("admin-login-screen").classList.add("hidden");
+            document.getElementById("admin-screen").classList.remove("hidden");
+            document.getElementById("main-container-box").className = "container-admin";
+            document.getElementById("admin-password").value = "";
+            updateAdminTable();
+            updateAdminDossierOptions();
+            populateShiftStaffSelect();
+            renderAdminActiveBreaks();
+            adminActiveBreaksInterval = setInterval(renderAdminActiveBreaks, 1000);
+            showToast("Yönetici girişi başarılı.");
+        } else {
+            showToast("Hatalı yönetici şifresi!");
+        }
+    }
+
+    function login() {
+        const staffName = document.getElementById("staff-select").value;
+        const pass = document.getElementById("staff-password").value;
+
+        if (!staffName) { showToast("Lütfen personel seçin."); return; }
+        
+        let staffObj = null;
+        if (database[currentBranch] && database[currentBranch].staff) {
+            staffObj = database[currentBranch].staff.find(s => s.name === staffName);
+        }
+
+        if (staffObj && staffObj.pass === pass) {
+            localStorage.setItem(`sweet_waffle_pass_${currentBranch}_${staffName}`, pass);
+
+            currentUser = staffName;
+            document.getElementById("login-screen").classList.add("hidden");
+            document.getElementById("panel-screen").classList.remove("hidden");
+            document.getElementById("welcome-title").innerText = `Hoş Geldiniz, ${currentUser}`;
+            document.getElementById("user-branch-info").innerText = `📍 Şube: ${currentBranch}`;
+            document.getElementById("staff-password").value = "";
+            
+            checkAndRestoreTimer();
+            updateUserPanelUI();
+            renderUserShiftView();
+            updateUserWeeklyHoursSummary();
+            showToast("Giriş başarılı.");
+        } else {
+            showToast("Hatalı şifre!");
+        }
+    }
+
+    function goBackToMain() {
+        document.getElementById("admin-login-screen").classList.add("hidden");
+        document.getElementById("login-screen").classList.add("hidden");
+        document.getElementById("panel-screen").classList.add("hidden");
+        document.getElementById("admin-screen").classList.add("hidden");
+        document.getElementById("qr-scanner-screen").classList.add("hidden");
+        document.getElementById("main-selection-screen").classList.remove("hidden");
+        document.getElementById("main-container-box").className = "container";
+        currentUser = null;
+        currentBranch = null;
+        if (adminActiveBreaksInterval) clearInterval(adminActiveBreaksInterval);
+        stopQrScanner();
+    }
+
+    function logout() {
+        goBackToMain();
+        showToast("Güvenli çıkış yapıldı.");
+    }
+
+    function openQrScannerDirectly() {
+        document.getElementById("panel-screen").classList.add("hidden");
+        document.getElementById("qr-scanner-screen").classList.remove("hidden");
+        startQrScanner();
+    }
+
+    function closeQrScanner() {
+        stopQrScanner();
+        document.getElementById("qr-scanner-screen").classList.add("hidden");
+        document.getElementById("panel-screen").classList.remove("hidden");
+    }
+
+    function startQrScanner() {
+        if (html5QrCode) {
+            stopQrScanner();
+        }
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            async (decodedText) => {
+                stopQrScanner();
+                document.getElementById("qr-scanner-screen").classList.add("hidden");
+                document.getElementById("panel-screen").classList.remove("hidden");
+                await processQrScanResult(decodedText);
+            },
+            (errorMessage) => {}
+        ).catch(err => {
+            showToast("Kamera başlatılamadı: " + err);
+            closeQrScanner();
+        });
+    }
+
+    function stopQrScanner() {
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+                html5QrCode = null;
+            }).catch(err => { console.log(err); });
+        }
+    }
+
+    async function processQrScanResult(qrText) {
+        if (!qrText.includes("SWEET_WAFFLE_BRANCH:")) {
+            showToast("Geçersiz şube QR kodu!");
+            return;
+        }
+
+        let parts = qrText.split("_");
+        let scannedBranch = null;
+        let scannedLat = null;
+        let scannedLng = null;
+
+        parts.forEach(part => {
+            if (part.startsWith("BRANCH:")) scannedBranch = part.replace("BRANCH:", "");
+            if (part.startsWith("LAT:")) scannedLat = parseFloat(part.replace("LAT:", ""));
+            if (part.startsWith("LNG:")) scannedLng = parseFloat(part.replace("LNG:", ""));
+        });
+
+        if (!scannedBranch || !database[scannedBranch]) {
+            showToast("Şube bilgisi doğrulanamadı.");
+            return;
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                let userLat = position.coords.latitude;
+                let userLng = position.coords.longitude;
+                let distance = calculateDistance(userLat, userLng, scannedLat, scannedLng);
+
+                if (distance <= 0.3) {
+                    let todayStr = new Date().toISOString().split('T')[0];
+                    let userLogs = window.globalLogsCache.filter(l => l.staff_name === currentUser && l.created_at && l.created_at.startsWith(todayStr));
+                    userLogs.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+
+                    let lastAction = userLogs.length > 0 ? userLogs[userLogs.length - 1].action : null;
+                    let targetAction = 'İşe Giriş';
+
+                    if (lastAction === 'İşe Giriş' || lastAction === 'Yemek Molası Dönüş' || lastAction === 'Normal Mola Dönüş') {
+                        targetAction = 'İşten Çıkış';
+                    }
+
+                    await triggerAction(targetAction, 0);
+                    showToast(`📍 ${scannedBranch} QR kodu doğrulandı: ${targetAction} kaydedildi!`);
+                } else {
+                    showToast(`❌ Konum uyuşmazlığı! Şubeden çok uzaktasınız (~${Math.round(distance*1000)}m).`);
+                }
+            }, (error) => {
+                showToast("Konum alınamadı. GPS ayarlarınızı kontrol edin.");
+            }, { enableHighAccuracy: true, timeout: 10000 });
+        } else {
+            showToast("Tarayıcınız konum servislerini desteklemiyor.");
+        }
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        function toRad(x) { return x * Math.PI / 180; }
+        let R = 6371;
+        let dLat = toRad(lat2 - lat1);
+        let dLon = toRad(lon2 - lon1);
+        let a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    async function triggerAction(actionName, durationMinutes) {
+        if (!currentUser || !currentBranch) return;
+
+        let expiryTime = null;
+        if (durationMinutes > 0) {
+            expiryTime = new Date(Date.now() + durationMinutes * 60 * 1000).toISOString();
+        }
+
+        const { error } = await supabaseClient.from('logs').insert([{
+            branch: currentBranch,
+            staff_name: currentUser,
+            action: actionName,
+            expiry_time: expiryTime
+        }]);
+
+        if (!error) {
+            showToast(`İşlem Başarılı: ${actionName}`);
+            if (expiryTime) {
+                localStorage.setItem(`sweet_waffle_timer_${currentUser}`, expiryTime);
+                startCountdown(new Date(expiryTime).getTime());
+            } else {
+                localStorage.removeItem(`sweet_waffle_timer_${currentUser}`);
+                clearTimerUI();
+            }
+            fetchLogs();
+        } else {
+            showToast("Kayıt sırasında hata oluştu.");
+        }
+    }
+
+    function startCountdown(targetTimestamp) {
+        const timerBox = document.getElementById("active-timer-box");
+        const display = document.getElementById("countdown-display");
+        if (!timerBox || !display) return;
+
+        timerBox.classList.remove("hidden");
+        if (countdownInterval) clearInterval(countdownInterval);
+
+        countdownInterval = setInterval(() => {
+            let now = Date.now();
+            let distance = targetTimestamp - now;
+
+            if (distance <= 0) {
+                clearInterval(countdownInterval);
+                timerBox.classList.add("hidden");
+                localStorage.removeItem(`sweet_waffle_timer_${currentUser}`);
+                showToast("Süreniz sona erdi!");
+                return;
+            }
+
+            let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            display.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+    }
+
+    function clearTimerUI() {
+        if (countdownInterval) clearInterval(countdownInterval);
+        const timerBox = document.getElementById("active-timer-box");
+        if (timerBox) timerBox.classList.add("hidden");
+    }
+
+    function checkAndRestoreTimer() {
+        if (!currentUser) return;
+        let savedTimer = localStorage.getItem(`sweet_waffle_timer_${currentUser}`);
+        if (savedTimer) {
+            let targetTime = new Date(savedTimer).getTime();
+            if (targetTime > Date.now()) {
+                startCountdown(targetTime);
+            } else {
+                localStorage.removeItem(`sweet_waffle_timer_${currentUser}`);
+                clearTimerUI();
+            }
+        }
+    }
+
+    function updateUserPanelUI() {
+        const todayLogsList = document.getElementById("today-logs");
+        if (!todayLogsList) return;
+
+        let todayStr = new Date().toISOString().split('T')[0];
+        let userLogs = window.globalLogsCache.filter(l => l.staff_name === currentUser && l.created_at && l.created_at.startsWith(todayStr));
+
+        if (userLogs.length === 0) {
+            todayLogsList.innerHTML = "<li>Kayıt bulunmuyor.</li>";
+            return;
+        }
+
+        todayLogsList.innerHTML = "";
+        userLogs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(log => {
+            let timeText = new Date(log.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            let li = document.createElement("li");
+            li.innerHTML = `<strong>${timeText}</strong> - ${log.action}`;
+            todayLogsList.appendChild(li);
+        });
+
+        updateUserWeeklyHoursSummary();
+    }
+
+    function renderUserShiftView() {
+        const tbody = document.getElementById("user-shift-view-table");
+        if (!tbody || !currentUser) return;
+        const schedule = window.globalSchedulesCache[currentUser];
+        if (!schedule) {
+            tbody.innerHTML = '<tr><td colspan="3">Merkez henüz program tanımlamadı.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = "";
+        DAYS_OF_WEEK.forEach(day => {
+            let dayData = schedule[day];
+            let tr = document.createElement("tr");
+            if (dayData && dayData.off) {
+                tr.innerHTML = `<td style="font-weight:bold;">${day}</td><td colspan="2" style="color:var(--accent-red); font-weight:bold;">İzinli Gün</td>`;
+            } else if (dayData) {
+                tr.innerHTML = `<td style="font-weight:bold;">${day}</td><td>${dayData.start} - ${dayData.end}</td><td style="color:var(--accent-green); font-weight:bold;">Çalışma</td>`;
+            } else {
+                tr.innerHTML = `<td style="font-weight:bold;">${day}</td><td colspan="2">Belirtilmemiş</td>`;
+            }
+            tbody.appendChild(tr);
+        });
+    }
+
+    function updateUserWeeklyHoursSummary() {
+        if (!currentUser) return;
+        let logs = window.globalLogsCache.filter(l => l.staff_name === currentUser);
+        
+        let weeklyMinutes = calculateTotalMinutes(logs, 7);
+        let monthlyMinutes = calculateTotalMinutes(logs, 30);
+
+        let wH = Math.floor(weeklyMinutes / 60);
+        let wD = weeklyMinutes % 60;
+        let mM = Math.floor(monthlyMinutes / 60);
+        let mD = monthlyMinutes % 60;
+
+        document.getElementById("weekly-hours").innerText = `${wH}s ${wD}d`;
+        document.getElementById("monthly-hours").innerText = `${mM}s ${mD}d`;
+    }
+
+    function calculateTotalMinutes(logs, daysLimit) {
+        let now = new Date();
+        let limitDate = new Date();
+        limitDate.setDate(now.getDate() - daysLimit);
+
+        let filtered = logs.filter(l => new Date(l.created_at) >= limitDate);
+        filtered.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+
+        let totalMins = 0;
+        let lastInTime = null;
+
+        filtered.forEach(log => {
+            let logTime = new Date(log.created_at);
+            if (log.action === 'İşe Giriş') {
+                lastInTime = logTime;
+            } else if (log.action === 'İşten Çıkış' && lastInTime) {
+                let diffMs = logTime - lastInTime;
+                totalMins += Math.floor(diffMs / (1000 * 60));
+                lastInTime = null;
+            }
+        });
+
+        return totalMins;
+    }
+
+    function updateStaffFilterOptions() {
+        const staffFilter = document.getElementById("staff-filter");
+        if (!staffFilter) return;
+        let currentVal = staffFilter.value;
+        staffFilter.innerHTML = '<option value="Tümü">Tüm Personeller</option>';
+        
+        let allStaffNames = new Set();
+        Object.keys(database).forEach(bKey => {
+            database[bKey].staff.forEach(st => allStaffNames.add(st.name));
+        });
+
+        allStaffNames.forEach(name => {
+            let opt = document.createElement("option");
+            opt.value = name;
+            opt.innerText = name;
+            staffFilter.appendChild(opt);
+        });
+        staffFilter.value = currentVal;
+    }
+
+    function updateAdminTable() {
+        const branchFilter = document.getElementById("branch-filter").value;
+        const staffFilter = document.getElementById("staff-filter").value;
+        const tbody = document.getElementById("admin-log-table");
+        if (!tbody) return;
+
+        let filtered = window.globalLogsCache.filter(l => {
+            let matchBranch = (branchFilter === 'Tümü' || l.branch === branchFilter);
+            let matchStaff = (staffFilter === 'Tümü' || l.staff_name === staffFilter);
+            return matchBranch && matchStaff;
+        });
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5">Kayıt bulunmuyor.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = "";
+        filtered.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(log => {
+            let timeText = new Date(log.created_at).toLocaleString('tr-TR');
+            let safeAction = (log.action || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            let tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${log.branch || '-'}</td>
+                <td>${log.staff_name}</td>
+                <td>${log.action}</td>
+                <td>${timeText}</td>
+                <td>
+                    <button class="btn-warning" style="padding:2px 5px; font-size:9px; border-radius:4px; margin-right:2px;" onclick="editLogItem('${log.id}', '${safeAction}')">Düzenle</button>
+                    <button class="btn-danger" style="padding:2px 5px; font-size:9px; border-radius:4px;" onclick="deleteLogItem('${log.id}')">Sil</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function updateAdminDossierOptions() {
+        const select = document.getElementById("admin-dossier-select");
+        if (!select) return;
+        let currentVal = select.value;
+        select.innerHTML = '<option value="">Rapor için personel seçiniz...</option>';
+
+        let allStaffNames = new Set();
+        Object.keys(database).forEach(bKey => {
+            database[bKey].staff.forEach(st => allStaffNames.add(st.name));
+        });
+
+        allStaffNames.forEach(name => {
+            let opt = document.createElement("option");
+            opt.value = name;
+            opt.innerText = name;
+            select.appendChild(opt);
+        });
+        select.value = currentVal;
+    }
+
+    function renderAdminStaffDossier() {
+        const staffName = document.getElementById("admin-dossier-select").value;
+        const resultArea = document.getElementById("dossier-result-area");
+        const summaryText = document.getElementById("dossier-summary-text");
+        const tbody = document.getElementById("dossier-logs-table");
+        if (!resultArea || !summaryText || !tbody) return;
+
+        if (!staffName) {
+            resultArea.classList.add("hidden");
+            return;
+        }
+
+        resultArea.classList.remove("hidden");
+        let logs = window.globalLogsCache.filter(l => l.staff_name === staffName);
+        let weeklyMins = calculateTotalMinutes(logs, 7);
+        let monthlyMins = calculateTotalMinutes(logs, 30);
+
+        summaryText.innerText = `Haftalık: ${Math.floor(weeklyMins/60)}s ${weeklyMins%60}d | Aylık: ${Math.floor(monthlyMins/60)}s ${monthlyMins%60}d`;
+
+        if (logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4">Veri yok</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = "";
+        logs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(log => {
+            let timeText = new Date(log.created_at).toLocaleString('tr-TR');
+            let safeAction = (log.action || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            let tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${log.branch || '-'}</td>
+                <td>${log.action}</td>
+                <td>${timeText}</td>
+                <td>
+                    <button class="btn-warning" style="padding:2px 4px; font-size:9px; border-radius:3px; margin-right:1px;" onclick="editLogItem('${log.id}', '${safeAction}')">Düzenle</button>
+                    <button class="btn-danger" style="padding:2px 4px; font-size:9px; border-radius:3px;" onclick="deleteLogItem('${log.id}')">Sil</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderAdminActiveBreaks() {
+        const tbody = document.getElementById("admin-active-breaks-tbody");
+        if (!tbody) return;
+
+        let activeBreaks = [];
+        let now = Date.now();
+
+        let staffMap = {};
+        window.globalLogsCache.forEach(log => {
+            if (!staffMap[log.staff_name] || new Date(log.created_at) > new Date(staffMap[log.staff_name].created_at)) {
+                staffMap[log.staff_name] = log;
+            }
+        });
+
+        Object.values(staffMap).forEach(log => {
+            if ((log.action === 'Yemek Molası Çıkış' || log.action === 'Normal Mola Çıkış') && log.expiry_time) {
+                let expiryMs = new Date(log.expiry_time).getTime();
+                if (expiryMs > now) {
+                    activeBreaks.push({ ...log, expiryMs });
+                }
+            }
+        });
+
+        if (activeBreaks.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4">Şu an molada/yemekte olan personel bulunmuyor.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = "";
+        activeBreaks.forEach(item => {
+            let diff = item.expiryMs - now;
+            let m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            let s = Math.floor((diff % (1000 * 60)) / 1000);
+            let timeStr = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+            let tr = document.createElement("tr");
+            tr.innerHTML = `<td>${item.branch || '-'}</td><td style="font-weight:bold;">${item.staff_name}</td><td>${item.action}</td><td style="color:var(--accent-red); font-weight:bold;">${timeStr}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function exportToExcel() {
+        let wsData = [["Şube", "Personel", "İşlem", "Zaman"]];
+        window.globalLogsCache.forEach(l => {
+            wsData.push([l.branch || '', l.staff_name, l.action, new Date(l.created_at).toLocaleString('tr-TR')]);
+        });
+        let wb = XLSX.utils.book_new();
+        let ws = XLSX.utils.aoa_to_sheet(wsData);
+        XLSX.utils.book_append_sheet(wb, ws, "Personel Hareketleri");
+        XLSX.writeFile(wb, "SweetWaffle_Rapor.xlsx");
+    }
+
+    function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text("Sweet Waffle - Personel Hareket Raporu", 14, 15);
+        
+        let y = 25;
+        doc.setFontSize(10);
+        window.globalLogsCache.slice(0, 30).forEach((l, i) => {
+            let line = `${i+1}. ${l.branch || ''} - ${l.staff_name} - ${l.action} (${new Date(l.created_at).toLocaleString('tr-TR')})`;
+            doc.text(line, 14, y);
+            y += 8;
+            if (y > 280) { doc.addPage(); y = 20; }
+        });
+        doc.save("SweetWaffle_Rapor.pdf");
     }
 </script>
-
 </body>
 </html>
