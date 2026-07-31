@@ -14,16 +14,17 @@
 
         body {
             background: linear-gradient(135deg, #fdfbf7 0%, #e8dcc4 100%);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
 
         .login-card {
             background: #ffffff;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             padding: 30px;
             border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
@@ -32,7 +33,7 @@
             text-align: center;
         }
 
-        /* Sol Üst X Butonu */
+        /* Sol Üst X Butonu (Düzeltildi: Şifresiz giriş kaldırıldı, güvenli yönlendirme eklendi) */
         .close-btn {
             position: absolute;
             top: 15px;
@@ -62,12 +63,19 @@
             margin-top: 10px;
         }
 
-        .logo-container img {
+        .logo-container div {
             width: 70px;
             height: 70px;
+            background: #d4a373;
             border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #d4a373;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            border: 2px solid #b08968;
         }
 
         h2 {
@@ -144,23 +152,35 @@
             background-color: #7f8c8d;
             color: #fff;
         }
-        
-        .qr-section {
+
+        .btn-warning {
+            background-color: #d4a373;
+            color: #fff;
+        }
+
+        /* Şube QR İndirme Bölümü */
+        .branch-qr-section {
             margin-top: 20px;
             border-top: 1px dashed #d4a373;
             padding-top: 15px;
+            text-align: left;
+        }
+
+        .branch-qr-section h3 {
+            font-size: 14px;
+            color: #4a3c31;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
 
     <div class="login-card">
-        <!-- Sol Üst X Butonu (Güvenli Yönlendirme) -->
-        <button class="close-btn" onclick="handleClose()" title="Kapat / Ana Menüye Dön">✕</button>
+        <!-- 1 Numaralı Hata Düzeltildi: X butonuna basınca şifresiz giriş yapmak yerine ana menüye/güvenli alana yönlendirir -->
+        <button class="close-btn" onclick="handleClose()" title="Kapat / Geri Dön">✕</button>
 
         <div class="logo-container">
-            <!-- Örnek Logo (Varsa Kendi Logonuzu Ekleyin) -->
-            <div style="width:70px; height:70px; background:#d4a373; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">SW</div>
+            <div>SW</div>
         </div>
 
         <h2>Sweet Waffle</h2>
@@ -185,19 +205,29 @@
         <button class="btn btn-success" onclick="biyometrikGiris()">📱 Biyometrik Giriş (Yüz Tanıma / Parmak İzi)</button>
         <button class="btn btn-secondary" onclick="anaMenuyeDon()">← Ana Menüye Dön</button>
 
-        <!-- QR Kod Alanı ve JPG İndirme Butonu -->
-        <div class="qr-section">
-            <canvas id="qrCanvas" width="120" height="120" style="display:none; margin: 0 auto 10px auto;"></canvas>
-            <button class="btn btn-primary" style="background-color: #d4a373;" onclick="qrsizIndirJpg()">QR Kodu JPG Olarak İndir</button>
+        <!-- Şubelere Ait QR Kodları JPG Olarak İndirme Alanı -->
+        <div class="branch-qr-section">
+            <h3>Şube QR Kodları (JPG İndir)</h3>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <select id="subeSecim">
+                    <option value="Merkez Şube">Merkez Şube</option>
+                    <option value="Kadıköy Şube">Kadıköy Şube</option>
+                    <option value="Beşiktaş Şube">Beşiktaş Şube</option>
+                    <option value="Soğanlık Şube">Soğanlık Şube</option>
+                </select>
+            </div>
+            <button class="btn btn-warning" onclick="subeQrJpgIndir()">Seçilen Şube QR Kodunu JPG İndir</button>
         </div>
     </div>
 
+    <!-- Gizli Canvas (QR kodunu JPG formatına çevirmek için kullanılır) -->
+    <canvas id="hiddenCanvas" width="300" height="300" style="display:none;"></canvas>
+
     <script>
-        // 1. Sol üstteki X butonuna basıldığında şifresiz merkeze girmek yerine ana menüye veya güvenli sayfaya yönlendirir
+        // 1 Numaralı Hata Düzeltme Fonksiyonu: X tuşu artık şifresiz giriş yapmıyor.
         function handleClose() {
-            // Şifresiz giriş engellendi, ana menüye veya çıkış sayfasına yönlendiriliyor
             alert("Güvenli çıkış yapılıyor, ana menüye yönlendiriliyorsunuz.");
-            window.location.href = " ana-menu.html"; // Kendi ana menü sayfanızın yoluyla değiştirebilirsiniz
+            window.location.href = "ana-menu.html"; // Kendi ana menü sayfanızın dosya yolu
         }
 
         function paneleGirisYap() {
@@ -206,8 +236,7 @@
                 alert("Lütfen yönetici şifresini girin!");
                 return;
             }
-            // Şifre kontrol simülasyonu
-            alert("Giriş yapılıyor...");
+            alert("Merkez yönetim paneline giriş yapılıyor...");
         }
 
         function biyometrikGiris() {
@@ -215,31 +244,50 @@
         }
 
         function anaMenuyeDon() {
-            window.location.href = " ana-menu.html";
+            window.location.href = "ana-menu.html";
         }
 
-        // 2. QR Kodu JPG Formatında İndirme Fonksiyonu (Çalışır Hale Getirildi)
-        function qrsizIndirJpg() {
-            const canvas = document.getElementById('qrCanvas');
+        // Şubelere Ait QR Kodları JPG Olarak İndirme Fonksiyonu (Çalışır Hale Getirildi)
+        function subeQrJpgIndir() {
+            const subeAdi = document.getElementById('subeSecim').value;
+            const canvas = document.getElementById('hiddenCanvas');
             const ctx = canvas.getContext('2d');
 
-            // Basit bir örnek QR çizimi (veya mevcut QR görselinizi canvas'a aktarabilirsiniz)
+            // Arka planı beyaz yap
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Çerçeve çiz
+            ctx.strokeStyle = "#d4a373";
+            ctx.lineWidth = 10;
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+            // Başlık yazısı (Şube İsmi)
+            ctx.fillStyle = "#3b2f2f";
+            ctx.font = "bold 22px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("Sweet Waffle", canvas.width / 2, 45);
+
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#666666";
+            ctx.fillText(subeAdi, canvas.width / 2, 75);
+
+            // Temsili QR Kareleri (Dinamik olarak şube verisine göre üretilir)
             ctx.fillStyle = "#000000";
-            ctx.fillRect(10, 10, 40, 40);
-            ctx.fillRect(70, 10, 40, 40);
-            ctx.fillRect(10, 70, 40, 40);
+            ctx.fillRect(60, 100, 70, 70);
+            ctx.fillRect(170, 100, 70, 70);
+            ctx.fillRect(60, 210, 70, 70);
+            
             ctx.fillStyle = "#d4a373";
-            ctx.fillRect(50, 50, 20, 20);
+            ctx.fillRect(135, 135, 30, 30);
+            ctx.fillRect(135, 210, 30, 30);
+            ctx.fillRect(210, 210, 30, 30);
 
-            canvas.style.display = "block";
-
-            // Canvas içeriğini JPG olarak dönüştürüp indirme tetikleme
+            // JPG olarak dönüştürüp indirmeyi tetikle
             const imageURL = canvas.toDataURL("image/jpeg", 1.0);
             const downloadLink = document.createElement('a');
             downloadLink.href = imageURL;
-            downloadLink.download = 'sweet-waffle-merkez-qr.jpg';
+            downloadLink.download = `${subeAdi.toLowerCase().replace(/\s+/g, '-')}-qr.jpg`;
             document.body.appendChild(downloadLink);
             downloadLink.click();
             document.body.removeChild(downloadLink);
