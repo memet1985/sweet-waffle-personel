@@ -176,11 +176,11 @@
         <button class="btn btn-branch" onclick="selectLocation('Yeni')">📍 Yeni Şube</button>
     </div>
 
-    <!-- 1.B. MERKEZ GİRİŞ ŞİFRE EKRANI (Otomatik doldurma ve biyometrik destekli güncellenmiş yapı) -->
+    <!-- 1.B. MERKEZ GİRİŞ ŞİFRE EKRANI (Tarayıcı otomatik doldurma ve şifre yöneticisi destekli form yapısı) -->
     <div id="admin-login-screen" class="hidden">
         <h3>🏢 Merkez Yönetim Girişi</h3>
         
-        <form id="admin-login-form" onsubmit="event.preventDefault(); verifyAdminLogin();">
+        <form id="admin-login-form" autocomplete="on" onsubmit="event.preventDefault(); verifyAdminLogin();">
             <label for="admin-user-select"><strong>Yönetici Seçin:</strong></label>
             <select id="admin-user-select" name="username" autocomplete="username" onchange="onAdminSelectChange()">
                 <option value="">Yönetici Seçiniz...</option>
@@ -204,7 +204,7 @@
         <h3 id="login-title">Şube Girişi</h3>
         
         <!-- Tarayıcı otomatik şifre yöneticisi / anahtar zinciri entegrasyonu için form yapısı -->
-        <form id="staff-login-form" onsubmit="event.preventDefault(); login();">
+        <form id="staff-login-form" autocomplete="on" onsubmit="event.preventDefault(); login();">
             <label for="staff-select"><strong>Personel Seçin:</strong></label>
             <select id="staff-select" name="username" autocomplete="username" onchange="onStaffSelectChange()"><option value="">Personel Seçiniz...</option></select>
             
