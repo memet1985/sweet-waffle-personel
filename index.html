@@ -241,7 +241,7 @@
         <h3 id="welcome-title" style="margin-bottom: 2px;">Hoş Geldiniz</h3>
         <p id="user-branch-info" style="text-align: center; color: var(--waffle-main); font-size: 12px; margin-bottom: 8px; font-weight: 700; font-family: Arial, sans-serif;"></p>
 
-        <div id="panel-announcement-wrapper"></div>
+        <!-- (Tekrara sebep olan panel içi duyuru alanı kaldırıldı, ortak alan kullanılıyor) -->
 
         <div id="active-timer-box" class="hidden" style="background: linear-gradient(135deg, #d1ecf1, #bee5eb); color: #0c5460; padding: 8px; border-radius: 10px; margin-bottom: 10px; font-weight: 700; text-align: center; border: 2px solid #17a2b8; font-size: 11px; font-family: Arial, sans-serif;">
             ⏳ Kalan Süre: <span id="countdown-display">00:00</span>
@@ -542,7 +542,6 @@
         if (!error && data) {
             window.globalMessagesCache = data;
             renderGlobalAnnouncements(data);
-            renderUserMessages(data);
             updateAdminMessagesList(data);
         }
     }
@@ -580,19 +579,6 @@
             let box = document.createElement("div");
             box.className = "msg-box";
             box.innerHTML = `📢 <strong>Merkezden Bildirim Var:</strong><p style="margin:4px 0 0 0; font-size:12px; font-weight:600; color:#4a2e1b; font-family:Arial, sans-serif;">${msgObj.text}</p>`;
-            container.appendChild(box);
-        });
-    }
-
-    function renderUserMessages(messages) {
-        const container = document.getElementById("panel-announcement-wrapper");
-        if (!container) return;
-        if (!messages || messages.length === 0) { container.innerHTML = ""; return; }
-        container.innerHTML = "";
-        messages.forEach(msgObj => {
-            let box = document.createElement("div");
-            box.className = "msg-box";
-            box.innerHTML = `📢 <strong>Merkez Duyurusu:</strong><p style="margin:4px 0 0 0; font-size:12px; font-weight:600; color:#4a2e1b; font-family:Arial, sans-serif;">${msgObj.text}</p>`;
             container.appendChild(box);
         });
     }
@@ -683,7 +669,6 @@
         }
     }
 
-    // Şube QR Kodunu Doğrudan Fotoğraflara İzin Alarak / Paylaşarak İndirme Fonksiyonu
     function downloadQrJpg(branchKey) {
         const branchInfo = database[branchKey];
         if (!branchInfo) return;
