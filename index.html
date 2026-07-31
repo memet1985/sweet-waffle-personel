@@ -176,12 +176,26 @@
         <button class="btn btn-branch" onclick="selectLocation('Yeni')">📍 Yeni Şube</button>
     </div>
 
-    <!-- 1.B. MERKEZ GİRİŞ ŞİFRE EKRANI -->
+    <!-- 1.B. MERKEZ GİRİŞ ŞİFRE EKRANI (Otomatik doldurma ve biyometrik destekli güncellenmiş yapı) -->
     <div id="admin-login-screen" class="hidden">
         <h3>🏢 Merkez Yönetim Girişi</h3>
-        <label><strong>Yönetici Şifresi:</strong></label>
-        <input type="password" id="admin-password" placeholder="Şifrenizi girin">
-        <button class="btn" onclick="verifyAdminLogin()">Panele Giriş Yap</button>
+        
+        <form id="admin-login-form" onsubmit="event.preventDefault(); verifyAdminLogin();">
+            <label for="admin-user-select"><strong>Yönetici Seçin:</strong></label>
+            <select id="admin-user-select" name="username" autocomplete="username" onchange="onAdminSelectChange()">
+                <option value="">Yönetici Seçiniz...</option>
+                <option value="Merkez Yetkilisi">Merkez Yetkilisi</option>
+            </select>
+            
+            <label for="admin-password"><strong>Yönetici Şifresi:</strong></label>
+            <input type="password" id="admin-password" name="password" autocomplete="current-password" placeholder="Şifrenizi girin">
+            
+            <button type="submit" class="btn">Panele Giriş Yap</button>
+        </form>
+
+        <!-- Yönetim girişi için biyometrik hızlı giriş butonu -->
+        <button id="admin-biometric-login-btn" class="btn btn-success hidden" style="margin-top: 6px;" onclick="adminBiometricLogin()">📱 Biyometrik Giriş (Yüz Tanıma / Parmak İzi)</button>
+
         <button class="btn btn-back" onclick="goBackToMain()">← Ana Menüye Dön</button>
     </div>
 
@@ -385,14 +399,15 @@
     const database = {
         "Kurtköy": { 
             staff: [
-                { name: "Nesrin", pass: "4821" }, 
-                { name: "Bengi", pass: "5932" },
-                { name: "Ayten", pass: "6143" },
-                { name: "Ezgi", pass: "7254" },
-                { name: "Ece", pass: "8365" },
-                { name: "Esra", pass: "9476" },
-                { name: "Rabia", pass: "1587" },
-                { name: "Hilal", pass: "2698" }
+                { name: "NESRİN", pass: "4821" }, 
+                { name: "BENGİ", pass: "5932" },
+                { name: "AYTEN", pass: "6143" },
+                { name: "EZGİ", pass: "7254" },
+                { name: "ECE", pass: "8365" },
+                { name: "ESMA", pass: "9476" },
+                { name: "RABİA", pass: "1587" },
+                { name: "HİLAL", pass: "2698" },
+                { name: "SERRA", pass: "3412" }
             ], 
             lat: 40.916286, lng: 29.303978, plusCode: "W883+CH" 
         },
@@ -760,6 +775,7 @@
         if (locKey === 'MerkezYonetim') {
             document.getElementById("main-selection-screen").classList.add("hidden");
             document.getElementById("admin-login-screen").classList.remove("hidden");
+            checkAdminBiometricAvailability();
         } else {
             currentBranch = locKey;
             document.getElementById("main-selection-screen").classList.add("hidden");
@@ -792,7 +808,6 @@
             return;
         }
 
-        // Cihaz belleğinden (localStorage) daha önce kaydedilmiş şifreyi otomatik doldur
         let savedPass = localStorage.getItem(`sweet_waffle_pass_${currentBranch}_${staffName}`);
         if (savedPass) {
             passInput.value = savedPass;
@@ -832,18 +847,15 @@
             return;
         }
 
-        // Cihazın ekran kilidi / biyometrik doğrulama desteği (Web Authentication API / Credentials)
         if (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
             try {
                 let available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
                 if (available) {
-                    // Cihazın kendi ekran kilidi/yüz tanıma doğrulamasını tetikle
                     const publicKeyCredentialRequestOptions = {
                         challenge: Uint8Array.from("sweetwaffle_auth_challenge", c => c.charCodeAt(0)),
                         timeout: 60000,
                         userVerification: "required"
                     };
-                    // Not: Platform doğrulayıcı tetiklenir (Parmak izi / Yüz tanıma)
                     await navigator.credentials.get({ publicKey: publicKeyCredentialRequestOptions });
                 }
             } catch (e) {
@@ -851,14 +863,88 @@
             }
         }
 
-        // Doğrulama başarılı veya cihaz desteklemiyorsa kayıtlı şifreyle otomatik giriş yap
         document.getElementById("staff-password").value = savedPass;
         login();
     }
 
+    function onAdminSelectChange() {
+        const adminUser = document.getElementById("admin-user-select").value;
+        const passInput = document.getElementById("admin-password");
+        if (!adminUser) {
+            passInput.value = "";
+            checkAdminBiometricAvailability();
+            return;
+        }
+
+        let savedPass = localStorage.getItem(`sweet_waffle_pass_Admin_${adminUser}`);
+        if (savedPass) {
+            passInput.value = savedPass;
+        } else {
+            passInput.value = "";
+        }
+        checkAdminBiometricAvailability();
+    }
+
+    function checkAdminBiometricAvailability() {
+        const adminUser = document.getElementById("admin-user-select").value;
+        const bioBtn = document.getElementById("admin-biometric-login-btn");
+        if (!adminUser) {
+            bioBtn.classList.add("hidden");
+            return;
+        }
+        let savedPass = localStorage.getItem(`sweet_waffle_pass_Admin_${adminUser}`);
+        let biometricRegistered = localStorage.getItem(`sweet_waffle_biometric_Admin_${adminUser}`);
+        
+        if (savedPass || biometricRegistered) {
+            bioBtn.classList.remove("hidden");
+        } else {
+            bioBtn.classList.add("hidden");
+        }
+    }
+
+    async function adminBiometricLogin() {
+        const adminUser = document.getElementById("admin-user-select").value;
+        if (!adminUser) {
+            showToast("Lütfen önce yönetici seçin.");
+            return;
+        }
+
+        let savedPass = localStorage.getItem(`sweet_waffle_pass_Admin_${adminUser}`);
+        if (!savedPass) {
+            showToast("Bu cihazda kayıtlı yönetici şifreniz bulunamadı. Lütfen önce şifrenizle giriş yapın.");
+            return;
+        }
+
+        if (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+            try {
+                let available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                if (available) {
+                    const publicKeyCredentialRequestOptions = {
+                        challenge: Uint8Array.from("sweetwaffle_admin_challenge", c => c.charCodeAt(0)),
+                        timeout: 60000,
+                        userVerification: "required"
+                    };
+                    await navigator.credentials.get({ publicKey: publicKeyCredentialRequestOptions });
+                }
+            } catch (e) {
+                console.log("Biyometrik doğrulama iptal edildi veya desteklenmiyor:", e);
+            }
+        }
+
+        document.getElementById("admin-password").value = savedPass;
+        verifyAdminLogin();
+    }
+
     function verifyAdminLogin() {
+        const adminUser = document.getElementById("admin-user-select").value;
         const pass = document.getElementById("admin-password").value;
+
+        if (!adminUser) { showToast("Lütfen yönetici seçin."); return; }
+
         if (pass === ADMIN_PASS) {
+            localStorage.setItem(`sweet_waffle_pass_Admin_${adminUser}`, pass);
+            localStorage.setItem(`sweet_waffle_biometric_Admin_${adminUser}`, "true");
+
             document.getElementById("admin-login-screen").classList.add("hidden");
             document.getElementById("admin-screen").classList.remove("hidden");
             document.getElementById("main-container-box").className = "container-admin";
@@ -868,6 +954,7 @@
             populateShiftStaffSelect();
             renderAdminActiveBreaks();
             adminActiveBreaksInterval = setInterval(renderAdminActiveBreaks, 1000);
+            showToast("Yönetici girişi başarılı, şifreniz kaydedildi.");
         } else {
             showToast("Hatalı yönetici şifresi!");
         }
@@ -885,7 +972,6 @@
         }
 
         if (staffObj && staffObj.pass === pass) {
-            // Şifreyi ve biyometrik izni telefonun belleğine (localStorage) güvenli şekilde kaydet
             localStorage.setItem(`sweet_waffle_pass_${currentBranch}_${staffName}`, pass);
             localStorage.setItem(`sweet_waffle_biometric_${currentBranch}_${staffName}`, "true");
 
@@ -995,7 +1081,7 @@
                 let userLng = position.coords.longitude;
                 let distance = calculateDistance(userLat, userLng, scannedLat, scannedLng);
 
-                if (distance <= 0.3) { // 300 metre tolerans
+                if (distance <= 0.3) {
                     let todayStr = new Date().toISOString().split('T')[0];
                     let userLogs = window.globalLogsCache.filter(l => l.staff_name === currentUser && l.created_at && l.created_at.startsWith(todayStr));
                     userLogs.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
@@ -1022,7 +1108,7 @@
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
         function toRad(x) { return x * Math.PI / 180; }
-        let R = 6371; // km
+        let R = 6371;
         let dLat = toRad(lat2 - lat1);
         let dLon = toRad(lon2 - lon1);
         let a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
