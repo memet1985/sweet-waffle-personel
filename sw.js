@@ -1,5 +1,5 @@
 self.addEventListener('push', function(event) {
-    let data = { title: 'Sweet Waffle - Yeni Duyuru', body: 'Merkezden yeni bir mesaj var.' };
+    let data = { title: 'Sweet Waffle - Bilgilendirme', body: 'Süreniz güncellendi.' };
     if (event.data) {
         try {
             data = event.data.json();
@@ -8,13 +8,20 @@ self.addEventListener('push', function(event) {
         }
     }
 
+    // Mola veya yemek bitişi için özel başlık/etiket ayrımı
+    let notificationTag = 'sweet-waffle-broadcast';
+    if (data.type === 'break_end') {
+        notificationTag = 'sweet-waffle-break-alarm';
+    }
+
     const options = {
         body: data.body,
         icon: 'logo.webp',
         badge: 'logo.webp',
-        vibrate: [200, 100, 200],
-        tag: 'sweet-waffle-broadcast',
-        renotify: true
+        vibrate: [300, 150, 300, 150, 300], // Daha belirgin titreşim
+        tag: notificationTag,
+        renotify: true,
+        data: data // Gelen veriyi tıklama olayında kullanabilmek için sakla
     };
 
     event.waitUntil(
@@ -24,6 +31,10 @@ self.addEventListener('push', function(event) {
 
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
+    
+    // Bildirime tıklandığında mola türüne göre yönlendirme yapılabilir
+    const notificationData = event.notification.data;
+
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
             for (let i = 0; i < clientList.length; i++) {
