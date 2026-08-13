@@ -298,18 +298,6 @@
             </div>
         </div>
 
-        <!-- TARİH SEÇİCİ / GEÇMİŞ GÜN İNCELEME ALANI -->
-        <div class="card" style="background: #fffdf9; border: 2px solid var(--waffle-gold); text-align: left; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <div>
-                <strong style="font-size: 11px; color: var(--waffle-dark); display: block;">📅 Kayıt İnceleme Tarihi:</strong>
-                <span id="active-date-display-text" style="font-size: 10px; color: var(--waffle-main); font-weight: bold;">Bugün (Canlı Gün)</span>
-            </div>
-            <div style="display: flex; gap: 4px; align-items: center;">
-                <input type="date" id="admin-history-date-picker" onchange="onHistoryDateChange()" style="margin: 0; padding: 4px; font-size: 11px; width: auto;">
-                <button class="btn btn-branch" style="width: auto; margin: 0; padding: 5px 8px; font-size: 10px;" onclick="resetToTodayDate()">Bugüne Dön</button>
-            </div>
-        </div>
-
         <!-- MERKEZ CANLI MOLA / YEMEK TAKİP ALANI -->
         <div class="card" style="background: #fff9f0; border: 2px solid var(--waffle-gold); text-align: left; margin-bottom: 12px;">
             <strong style="font-size: 12px; color: var(--waffle-dark); display: block; margin-bottom: 6px;">☕🍽️ Şu Anda Molada / Yemekte Olan Personeller (Canlı Sayaç)</strong>
@@ -389,7 +377,19 @@
                     </div>
                 </div>
 
+                <!-- BURAYA İSTENEN TAKVİM SEÇİCİ VE GEÇMİŞ GÜN FİLTRELEME ALANI ENTEGRE EDİLDİ -->
                 <div class="card" style="margin-top: 6px; text-align: left;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; background: #faebd7; padding: 6px; border-radius: 8px; border: 1px solid var(--waffle-gold);">
+                        <div>
+                            <strong style="font-size: 11px; color: var(--waffle-dark); display: block;">📅 Kayıt İnceleme Tarihi:</strong>
+                            <span id="active-date-display-text" style="font-size: 10px; color: var(--accent-green); font-weight: bold;">Bugün (Canlı Gün)</span>
+                        </div>
+                        <div style="display: flex; gap: 4px; align-items: center;">
+                            <input type="date" id="admin-history-date-picker" onchange="onHistoryDateChange()" style="margin: 0; padding: 3px; font-size: 10px; width: auto;">
+                            <button class="btn btn-branch" style="width: auto; margin: 0; padding: 4px 6px; font-size: 9px;" onclick="resetToTodayDate()">Bugüne Dön</button>
+                        </div>
+                    </div>
+
                     <div style="display: flex; gap: 4px; width: 100%; margin-bottom: 4px;">
                         <select id="branch-filter" onchange="updateAdminTable()" style="margin: 0; padding: 3px; font-size: 10px; flex: 1;">
                             <option value="Tümü">Tüm Şubeler</option>
@@ -1322,7 +1322,6 @@
             selectedHistoryDate = picker.value;
             updateHistoryDateDisplayLabel();
             updateAdminTable();
-            renderAdminStaffDossier();
         }
     }
 
@@ -1332,7 +1331,6 @@
         if (picker) picker.value = selectedHistoryDate;
         updateHistoryDateDisplayLabel();
         updateAdminTable();
-        renderAdminStaffDossier();
         showToast("Bugünün canlı ekranına dönüldü.");
     }
 
@@ -1425,18 +1423,10 @@
         let weeklyMins = calculateTotalMinutes(allStaffLogs, 7);
         let monthlyMins = calculateTotalMinutes(allStaffLogs, 30);
 
-        summaryText.innerText = `Haftalık: ${Math.floor(weeklyMins/60)}s ${weeklyMins%60}d | Aylık: ${Math.floor(monthlyMins/60)}s ${monthlyMins%60}d (${selectedHistoryDate} Tarihli Görünüm)`;
-
-        // Seçilen tarihe göre personelin dosyası/hareketleri filtrelenir
-        let filteredLogs = allStaffLogs.filter(l => l.created_at && l.created_at.split('T')[0] === selectedHistoryDate);
-
-        if (filteredLogs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">Seçilen tarihte veri yok</td></tr>';
-            return;
-        }
+        summaryText.innerText = `Haftalık: ${Math.floor(weeklyMins/60)}s ${weeklyMins%60}d | Aylık: ${Math.floor(monthlyMins/60)}s ${monthlyMins%60}d`;
 
         tbody.innerHTML = "";
-        filteredLogs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(log => {
+        allStaffLogs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10).forEach(log => {
             let timeText = new Date(log.created_at).toLocaleString('tr-TR');
             let safeAction = (log.action || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             let tr = document.createElement("tr");
@@ -1477,7 +1467,7 @@
         });
 
         if (activeBreaks.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">Şu an molada/yemekte olan personel bulunmuyor.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4">Şu an molada/yemekte olan personel bulunmiyor.</td></tr>';
             return;
         }
 
@@ -1510,7 +1500,7 @@
         const doc = new jsPDF();
         doc.text("Sweet Waffle - Personel Hareket Raporu", 14, 15);
         
-        let y = 25;
+        y = 25;
         doc.setFontSize(10);
         window.globalLogsCache.slice(0, 30).forEach((l, i) => {
             let line = `${i+1}. ${l.branch || ''} - ${l.staff_name} - ${l.action} (${new Date(l.created_at).toLocaleString('tr-TR')})`;
