@@ -27,6 +27,7 @@
             --accent-green: #27ae60;
             --accent-red: #e74c3c;
             --accent-blue: #3498db;
+            --accent-pink: #ff6b81;
             --text-dark: #2c3e50;
             --border-warm: #f0dec9;
         }
@@ -137,6 +138,7 @@
         .btn-danger { background: linear-gradient(135deg, #ff6b6b, #ee5253); color: #fff; }
         .btn-warning { background: linear-gradient(135deg, #feca57, #ff9f43); color: #fff; }
         .btn-success { background: linear-gradient(135deg, #2ed573, #26af5f); color: #fff; }
+        .btn-pink { background: linear-gradient(135deg, #ff6b81, #ff4757); color: #fff; box-shadow: 0 3px 10px rgba(255,107,129,0.3); }
 
         .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
         .action-btn {
@@ -197,6 +199,12 @@
         <button class="btn btn-branch" onclick="selectLocation('Kurtköy')">📍 Kurtköy Şubesi</button>
         <button class="btn btn-branch" onclick="selectLocation('Soğanlık')">📍 Soğanlık Şubesi</button>
         <button class="btn btn-branch" onclick="selectLocation('Yeni')">📍 Yeni Şube</button>
+        
+        <!-- ENTEGRE EDİLEN ÖZEL AKSİYON BUTONLARI -->
+        <div style="margin-top: 15px; border-top: 2px dashed var(--border-warm); padding-top: 12px;">
+            <button class="btn btn-pink" onclick="openCustomActionModal('loyalty')">💖 Sadakat Kulübü / Puan İşlemleri</button>
+            <button class="btn btn-branch" onclick="openCustomActionModal('quickReport')">📊 Hızlı Şube Raporu Görüntüle</button>
+        </div>
     </div>
 
     <!-- 1.B. MERKEZ GİRİŞ ŞİFRE EKRANI -->
@@ -267,6 +275,11 @@
             </div>
         </div>
 
+        <!-- PERSONEL PANELİ İÇİN EK ENTEGRE BUTONLAR -->
+        <div style="margin-bottom: 10px;">
+            <button class="btn btn-pink" style="padding: 10px; font-size: 12px;" onclick="showToast('Sadakat puanı sorgulama ekranı aktif.')">✨ Müşteri Puan Sorgula / Harca</button>
+        </div>
+
         <div class="stats">
             <div class="stat-box"><strong>Haftalık Çalışma</strong><br><span id="weekly-hours" style="font-size: 12px; font-weight: 800; color: var(--waffle-dark);">0s 0d</span></div>
             <div class="stat-box"><strong>Aylık Çalışma</strong><br><span id="monthly-hours" style="font-size: 12px; font-weight: 800; color: var(--waffle-dark);">0s 0d</span></div>
@@ -316,6 +329,15 @@
                 <button class="btn btn-branch" style="width: auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="downloadQrJpg('Kurtköy')">📍 Kurtköy QR (Fotoğraflara İndir)</button>
                 <button class="btn btn-branch" style="width: auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="downloadQrJpg('Soğanlık')">📍 Soğanlık QR (Fotoğraflara İndir)</button>
                 <button class="btn btn-branch" style="width: auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="downloadQrJpg('Yeni')">📍 Yeni Şube QR (Fotoğraflara İndir)</button>
+            </div>
+        </div>
+
+        <!-- YÖNETİM PANELİ EK ENTEGRE BUTONLAR -->
+        <div class="card" style="background: #fffdf9; border: 2px solid var(--waffle-gold); text-align: left;">
+            <strong style="font-size: 11px; color: var(--waffle-dark); display: block; margin-bottom: 6px;">⚙️ Hızlı Yönetim Kısayolları</strong>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button class="btn btn-pink" style="width: auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="showToast('Tüm şube finansal özet raporu hazırlanıyor...')">💰 Şube Finansal Özet</button>
+                <button class="btn btn-warning" style="width: auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="showToast('Sistem logları yedekleniyor.')">📥 Veritabanı Yedekle</button>
             </div>
         </div>
 
@@ -496,6 +518,14 @@
         t.innerText = msg;
         document.body.appendChild(t);
         setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2500);
+    }
+
+    function openCustomActionModal(type) {
+        if(type === 'loyalty') {
+            showToast("Sweet Waffle Sadakat Kulübü paneline yönlendiriliyor...");
+        } else if(type === 'quickReport') {
+            showToast("Şube genel durum raporu yükleniyor...");
+        }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -1492,6 +1522,7 @@
 
     function exportToExcel() {
         let wsData = [["Şube", "Personel", "İşlem", "Zaman"]];
+        window.globalLogsCache.exports = [];
         window.globalLogsCache.forEach(l => {
             wsData.push([l.branch || '', l.staff_name, l.action, new Date(l.created_at).toLocaleString('tr-TR')]);
         });
