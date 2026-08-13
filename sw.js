@@ -1,5 +1,10 @@
 self.addEventListener('push', function(event) {
-    let data = { title: 'Sweet Waffle - Bilgilendirme', body: 'Süreniz güncellendi.' };
+    let data = { 
+        title: 'Sweet Waffle - Yeni Duyuru', 
+        body: 'Merkezden yeni bir mesaj var.',
+        type: 'general'
+    };
+    
     if (event.data) {
         try {
             data = event.data.json();
@@ -8,33 +13,44 @@ self.addEventListener('push', function(event) {
         }
     }
 
-    // Mola veya yemek bitişi için özel başlık/etiket ayrımı
     let notificationTag = 'sweet-waffle-broadcast';
+    let vibrationPattern = [200, 100, 200];
+    let notificationTitle = data.title;
+    let notificationBody = data.body;
+
+    // Mola bitişi için özel ayarlar
     if (data.type === 'break_end') {
         notificationTag = 'sweet-waffle-break-alarm';
+        notificationTitle = data.title || 'Mola Süresi Bitti!';
+        notificationBody = data.body || 'Mola süreniz sona erdi, işbaşı yapabilirsiniz.';
+        vibrationPattern = [300, 150, 300]; // Mola için kısa/ritmik titreşim
+    } 
+    // Yemek çıkışı/bitişi için özel ayarlar
+    else if (data.type === 'meal_end') {
+        notificationTag = 'sweet-waffle-meal-alarm';
+        notificationTitle = data.title || 'Yemek Molası Bitti!';
+        notificationBody = data.body || 'Yemek süreniz sona erdi, çalışma alanına dönebilirsiniz.';
+        vibrationPattern = [500, 200, 500, 200, 500]; // Yemek için daha uzun ve dikkat çekici titreşim
     }
 
     const options = {
-        body: data.body,
+        body: notificationBody,
         icon: 'logo.webp',
         badge: 'logo.webp',
-        vibrate: [300, 150, 300, 150, 300], // Daha belirgin titreşim
+        vibrate: vibrationPattern,
         tag: notificationTag,
         renotify: true,
-        data: data // Gelen veriyi tıklama olayında kullanabilmek için sakla
+        data: data
     };
 
     event.waitUntil(
-        self.registration.showNotification(data.title, options)
+        self.registration.showNotification(notificationTitle, options)
     );
 });
 
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     
-    // Bildirime tıklandığında mola türüne göre yönlendirme yapılabilir
-    const notificationData = event.notification.data;
-
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
             for (let i = 0; i < clientList.length; i++) {
