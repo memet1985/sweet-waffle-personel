@@ -298,6 +298,18 @@
             </div>
         </div>
 
+        <!-- TARİH SEÇİCİ / GEÇMİŞ GÜN İNCELEME ALANI -->
+        <div class="card" style="background: #fffdf9; border: 2px solid var(--waffle-gold); text-align: left; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div>
+                <strong style="font-size: 11px; color: var(--waffle-dark); display: block;">📅 Kayıt İnceleme Tarihi:</strong>
+                <span id="active-date-display-text" style="font-size: 10px; color: var(--waffle-main); font-weight: bold;">Bugün (Canlı Gün)</span>
+            </div>
+            <div style="display: flex; gap: 4px; align-items: center;">
+                <input type="date" id="admin-history-date-picker" onchange="onHistoryDateChange()" style="margin: 0; padding: 4px; font-size: 11px; width: auto;">
+                <button class="btn btn-branch" style="width: auto; margin: 0; padding: 5px 8px; font-size: 10px;" onclick="resetToTodayDate()">Bugüne Dön</button>
+            </div>
+        </div>
+
         <!-- MERKEZ CANLI MOLA / YEMEK TAKİP ALANI -->
         <div class="card" style="background: #fff9f0; border: 2px solid var(--waffle-gold); text-align: left; margin-bottom: 12px;">
             <strong style="font-size: 12px; color: var(--waffle-dark); display: block; margin-bottom: 6px;">☕🍽️ Şu Anda Molada / Yemekte Olan Personeller (Canlı Sayaç)</strong>
@@ -456,6 +468,9 @@
     window.globalSchedulesCache = {};
     window.globalMessagesCache = [];
 
+    // Geçmiş gün inceleme filtresi için aktif tarih (YYYY-MM-DD formatında)
+    let selectedHistoryDate = new Date().toISOString().split('T')[0];
+
     let lastToastMsg = null;
     let lastToastTime = 0;
 
@@ -477,6 +492,12 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+        // Sayfa yenilendiğinde bugünün tarihiyle tertemiz (varsayılan) başlatılır
+        selectedHistoryDate = new Date().toISOString().split('T')[0];
+        let picker = document.getElementById("admin-history-date-picker");
+        if(picker) picker.value = selectedHistoryDate;
+        updateHistoryDateDisplayLabel();
+
         registerServiceWorker();
         setupRealtimeSubscriptions();
         fetchAllData();
@@ -938,10 +959,10 @@
             document.getElementById("admin-screen").classList.remove("hidden");
             document.getElementById("main-container-box").className = "container-admin";
             document.getElementById("admin-password").value = "";
-            updateAdminTable();
-            updateAdminDossierOptions();
-            populateShiftStaffSelect();
-            renderAdminActiveBreaks();
+            
+            // Yönetici paneli her açıldığında varsayılan olarak günün (bugünün) tarihiyle tertemiz başlar
+            resetToTodayDate();
+
             adminActiveBreaksInterval = setInterval(renderAdminActiveBreaks, 1000);
             showToast("Yönetici girişi başarılı.");
         } else {
@@ -975,7 +996,6 @@
             renderUserShiftView();
             updateUserWeeklyHoursSummary();
             
-            // Push aboneliğini tetikle
             subscribeUserToPush();
 
             showToast("Giriş başarılı.");
@@ -1295,20 +1315,57 @@
         staffFilter.value = currentVal;
     }
 
+    // TARİH SEÇİCİ KONTROL FONKSİYONLARI
+    function onHistoryDateChange() {
+        const picker = document.getElementById("admin-history-date-picker");
+        if (picker && picker.value) {
+            selectedHistoryDate = picker.value;
+            updateHistoryDateDisplayLabel();
+            updateAdminTable();
+            renderAdminStaffDossier();
+        }
+    }
+
+    function resetToTodayDate() {
+        selectedHistoryDate = new Date().toISOString().split('T')[0];
+        const picker = document.getElementById("admin-history-date-picker");
+        if (picker) picker.value = selectedHistoryDate;
+        updateHistoryDateDisplayLabel();
+        updateAdminTable();
+        renderAdminStaffDossier();
+        showToast("Bugünün canlı ekranına dönüldü.");
+    }
+
+    function updateHistoryDateDisplayLabel() {
+        const label = document.getElementById("active-date-display-text");
+        if (!label) return;
+        let todayStr = new Date().toISOString().split('T')[0];
+        if (selectedHistoryDate === todayStr) {
+            label.innerText = "Bugün (Canlı Gün)";
+            label.style.color = "var(--accent-green)";
+        } else {
+            label.innerText = `Geçmiş Tarih: ${selectedHistoryDate}`;
+            label.style.color = "var(--accent-orange)";
+        }
+    }
+
     function updateAdminTable() {
         const branchFilter = document.getElementById("branch-filter").value;
         const staffFilter = document.getElementById("staff-filter").value;
         const tbody = document.getElementById("admin-log-table");
         if (!tbody) return;
 
+        // Seçilen tarihe göre kayıtları arka planda filtrele (Yalnızca o güne ait loglar listelenir, diğerleri kaybolmaz)
         let filtered = window.globalLogsCache.filter(l => {
+            let logDateStr = l.created_at ? l.created_at.split('T')[0] : '';
+            let matchDate = (logDateStr === selectedHistoryDate);
             let matchBranch = (branchFilter === 'Tümü' || l.branch === branchFilter);
             let matchStaff = (staffFilter === 'Tümü' || l.staff_name === staffFilter);
-            return matchBranch && matchStaff;
+            return matchDate && matchBranch && matchStaff;
         });
 
         if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5">Kayıt bulunmuyor.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5">Seçilen tarihte kayıt bulunmuyor.</td></tr>';
             return;
         }
 
@@ -1364,19 +1421,22 @@
         }
 
         resultArea.classList.remove("hidden");
-        let logs = window.globalLogsCache.filter(l => l.staff_name === staffName);
-        let weeklyMins = calculateTotalMinutes(logs, 7);
-        let monthlyMins = calculateTotalMinutes(logs, 30);
+        let allStaffLogs = window.globalLogsCache.filter(l => l.staff_name === staffName);
+        let weeklyMins = calculateTotalMinutes(allStaffLogs, 7);
+        let monthlyMins = calculateTotalMinutes(allStaffLogs, 30);
 
-        summaryText.innerText = `Haftalık: ${Math.floor(weeklyMins/60)}s ${weeklyMins%60}d | Aylık: ${Math.floor(monthlyMins/60)}s ${monthlyMins%60}d`;
+        summaryText.innerText = `Haftalık: ${Math.floor(weeklyMins/60)}s ${weeklyMins%60}d | Aylık: ${Math.floor(monthlyMins/60)}s ${monthlyMins%60}d (${selectedHistoryDate} Tarihli Görünüm)`;
 
-        if (logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">Veri yok</td></tr>';
+        // Seçilen tarihe göre personelin dosyası/hareketleri filtrelenir
+        let filteredLogs = allStaffLogs.filter(l => l.created_at && l.created_at.split('T')[0] === selectedHistoryDate);
+
+        if (filteredLogs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4">Seçilen tarihte veri yok</td></tr>';
             return;
         }
 
         tbody.innerHTML = "";
-        logs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(log => {
+        filteredLogs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(log => {
             let timeText = new Date(log.created_at).toLocaleString('tr-TR');
             let safeAction = (log.action || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             let tr = document.createElement("tr");
