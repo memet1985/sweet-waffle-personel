@@ -241,8 +241,6 @@
         <h3 id="welcome-title" style="margin-bottom: 2px;">Hoş Geldiniz</h3>
         <p id="user-branch-info" style="text-align: center; color: var(--waffle-main); font-size: 12px; margin-bottom: 8px; font-weight: 700; font-family: Arial, sans-serif;"></p>
 
-        <!-- (Tekrara sebep olan panel içi duyuru alanı kaldırıldı, ortak alan kullanılıyor) -->
-
         <div id="active-timer-box" class="hidden" style="background: linear-gradient(135deg, #d1ecf1, #bee5eb); color: #0c5460; padding: 8px; border-radius: 10px; margin-bottom: 10px; font-weight: 700; text-align: center; border: 2px solid #17a2b8; font-size: 11px; font-family: Arial, sans-serif;">
             ⏳ Kalan Süre: <span id="countdown-display">00:00</span>
         </div>
@@ -502,6 +500,44 @@
         }
     }
 
+    async function subscribeUserToPush() {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+        
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            let subscription = await registration.pushManager.getSubscription();
+            
+            if (!subscription) {
+                const publicVapidKey = 'SUNUCU_VAPID_PUBLIC_KEY_BURAYA'; 
+                if (publicVapidKey === 'SUNUCU_VAPID_PUBLIC_KEY_BURAYA') return;
+
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+                });
+            }
+
+            if (currentUser) {
+                await supabaseClient.from('push_subscriptions').upsert([
+                    { staff_name: currentUser, subscription: subscription }
+                ], { onConflict: 'staff_name' });
+            }
+        } catch (err) {
+            console.error('Push abonelik hatası:', err);
+        }
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
     async function fetchAllData() {
         await fetchMessages();
         await fetchLogs();
@@ -666,6 +702,22 @@
             showToast("Duyuru yayınlandı.");
             input.value = "";
             fetchMessages();
+            triggerPushNotificationsToAll(text);
+        } else {
+            showToast("Duyuru yayınlanırken hata oluştu.");
+        }
+    }
+
+    async function triggerPushNotificationsToAll(messageText) {
+        try {
+            const { data: subscriptions, error } = await supabaseClient
+                .from('push_subscriptions')
+                .select('*');
+
+            if (error || !subscriptions) return;
+            console.log("Bildirim gönderilecek aktif abone sayısı:", subscriptions.length);
+        } catch (err) {
+            console.error("Toplu bildirim gönderme hatası:", err);
         }
     }
 
@@ -923,6 +975,10 @@
             updateUserPanelUI();
             renderUserShiftView();
             updateUserWeeklyHoursSummary();
+            
+            // Push aboneliğini tetikle
+            subscribeUserToPush();
+
             showToast("Giriş başarılı.");
         } else {
             showToast("Hatalı şifre!");
