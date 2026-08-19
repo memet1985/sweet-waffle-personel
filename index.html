@@ -138,7 +138,6 @@
         .btn-warning { background: linear-gradient(135deg, #feca57, #ff9f43); color: #fff; }
         .btn-success { background: linear-gradient(135deg, #2ed573, #26af5f); color: #fff; }
 
-        /* --- YENİLENEN MODERN HIZLI ÇALIŞMA İŞLEMLERİ BUTONLARI --- */
         .action-grid { 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
@@ -173,21 +172,13 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
 
-        .action-btn .icon {
-            font-size: 18px;
-            line-height: 1;
-        }
-
-        .action-btn .label {
-            font-size: 12px;
-            letter-spacing: 0.3px;
-        }
+        .action-btn .icon { font-size: 18px; line-height: 1; }
+        .action-btn .label { font-size: 12px; letter-spacing: 0.3px; }
         
         .btn-meal-in { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
         .btn-meal-out { background: linear-gradient(135deg, #ff9a44 0%, #fc6076 100%); }
         .btn-break-in { background: linear-gradient(135deg, #b224ef 0%, #7579ff 100%); }
         .btn-break-out { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #4a2e1b !important; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
-        /* -------------------------------------------------------- */
 
         select, input, textarea {
             width: 100%; padding: 10px 12px; margin: 4px 0 8px 0;
@@ -224,7 +215,6 @@
     </div>
     <h2>Sweet Waffle</h2>
 
-    <!-- GENEL ORTAK DUYURU ALANI -->
     <div id="global-announcement-wrapper"></div>
 
     <!-- 1. LOKASYON SEÇİMİ -->
@@ -294,7 +284,6 @@
 
         <button class="btn btn-qr-scan" onclick="openQrScannerDirectly()">📍📷 QR Kod Okut (Giriş / Çıkış)</button>
 
-        <!-- YENİLENEN ŞIK HIZLI ÇALIŞMA İŞLEMLERİ BUTONLARI -->
         <div class="card" style="padding: 10px; text-align: left;">
             <strong style="font-size: 11px; color: var(--waffle-dark); display: block; margin-bottom: 6px; text-transform: uppercase;">⏱️ Hızlı Çalışma İşlemleri</strong>
             <div class="action-grid">
@@ -333,7 +322,7 @@
     <!-- 3.B. QR KAMERA TARAYICI EKRANI -->
     <div id="qr-scanner-screen" class="hidden">
         <h3>📷 Şube QR Kod Tarayıcı</h3>
-        <p style="text-align: center; font-size: 11px; color: #666; font-family: Arial, sans-serif;">Lütfen şubenin QR kodunu kameraya okutun (Aynı kodu 2. kez okutmanız ÇIKIŞ olarak işlenir).</p>
+        <p style="text-align: center; font-size: 11px; color: #666; font-family: Arial, sans-serif;">Lütfen şubenin QR kodunu kameraya okutun (İlk okutuş GİRİŞ, ikinci okutuş ÇIKIŞ olarak işlenir).</p>
         <div id="reader"></div>
         <button class="btn btn-back" onclick="closeQrScanner()">Kamerayı Kapat</button>
     </div>
@@ -348,7 +337,6 @@
             </div>
         </div>
 
-        <!-- MERKEZ CANLI MOLA / YEMEK TAKİP ALANI -->
         <div class="card" style="background: #fff9f0; border: 2px solid var(--waffle-gold); text-align: left; margin-bottom: 12px;">
             <strong style="font-size: 12px; color: var(--waffle-dark); display: block; margin-bottom: 6px;">☕🍽️ Şu Anda Molada / Yemekte Olan Personeller (Canlı Sayaç)</strong>
             <div style="max-height: 120px; overflow-y: auto;">
@@ -359,7 +347,6 @@
             </div>
         </div>
 
-        <!-- ŞUBE QR KODLARI YÖNETİM ALANI -->
         <div class="card" style="background: #fffdf9; border: 2px solid var(--waffle-gold); text-align: left;">
             <strong style="font-size: 11px; color: var(--waffle-dark); display: block; margin-bottom: 4px;">🖼️ Şube Konum Bazlı QR Kodlar (Fotoğraflara İndir)</strong>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
@@ -427,7 +414,6 @@
                     </div>
                 </div>
 
-                <!-- GEÇMİŞ GÜN FİLTRELEME ALANI -->
                 <div class="card" style="margin-top: 6px; text-align: left;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; background: #faebd7; padding: 6px; border-radius: 8px; border: 1px solid var(--waffle-gold);">
                         <div>
@@ -1099,8 +1085,9 @@
                     userLogs.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
 
                     let lastAction = userLogs.length > 0 ? userLogs[userLogs.length - 1].action : null;
+                    
+                    // KONTROL: İlk okutuşta giriş, ikinci okutuşta çıkış
                     let targetAction = 'İşe Giriş';
-
                     if (lastAction === 'İşe Giriş' || lastAction === 'Yemek Molası Dönüş' || lastAction === 'Normal Mola Dönüş') {
                         targetAction = 'İşten Çıkış';
                     }
